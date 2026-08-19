@@ -100,6 +100,24 @@ def setup_encoder(train_config, model_config, **kwargs):
             #sys.exit()
             from transformers import Wav2Vec2ForCTC # , Wav2Vec2CTCTokenizer, Wav2Vec2Processor
             encoder=Wav2Vec2ForCTC.from_pretrained(model_config.encoder_path)
+        if encoder_name == "fama":
+            import transformers.models.speech_to_text.modeling_speech_to_text as s2t
+            s2t.SPEECH_TO_TEXT_INPUTS_DOCSTRING = "" # Bypass the version docstring regression
+            
+            from transformers import AutoModelForSpeechSeq2Seq
+            logger.info(f"Loading FAMA model from {model_config.encoder_path} to isolate encoder...")
+            
+            # 1. Load the full model structure temporarily
+            full_fama_model = AutoModelForSpeechSeq2Seq.from_pretrained(model_config.encoder_path,trust_remote_code=True)
+                        
+            # 2. Extract ONLY the ConformerEncoder block
+            encoder = full_fama_model.model.encoder
+
+            # 3. Explicitly delete the heavy decoder components to free up RAM/VRAM
+            del full_fama_model.model.decoder
+            del full_fama_model.lm_head
+            del full_fama_model
+            import gc; gc.collect()
         if encoder_name == "av_hubert":
             from slam_llm.models.encoder import AVHubertEncoder
             encoder = AVHubertEncoder.load(model_config)
@@ -155,6 +173,14 @@ def setup_llm(train_config, model_config, **kwargs):
                     model_config.llm_path,
                     load_in_8bit=True if train_config.quantization else None,
                     device_map="auto" if train_config.quantization else None,
+                    use_cache=use_cache,
+                )
+            elif "villanova" in model_config.llm_name.lower():
+                # Dedicated initialization block if it requires unique token management, 
+                # specific flash attention configurations, or distinct remote code validation.
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_config.llm_path,
+                    trust_remote_code=True, # Required if it includes unique architecture files
                     use_cache=use_cache,
                 )
             else:
@@ -372,6 +398,35 @@ class slam_model(nn.Module):
                     #sys.exit()
                 else:
                     encoder_logits=None
+            if self.model_config.encoder_name == "fama":
+                # FAMA's Conformer encoder expects Mel Filterbank inputs [Batch, Frames, 80]
+                input_features = audio_mel if audio_mel is not None else audio
+                
+                # Ensure the attention mask is a 2D tensor [Batch, Frames] of integers
+                if audio_mel_mask is not None:
+                    # Cast to long integer so .sum(dim=1) inside FAMA works flawlessly
+                    fama_mask = audio_mel_mask.long()
+                else:
+                    batch_size, max_frames, _ = input_features.shape
+                    fama_mask = torch.ones((batch_size, max_frames), dtype=torch.long, device=input_features.device)
+
+                # Forward pass matching the exact Hugging Face parameter name
+                outs_e = self.encoder(
+                    input_features, 
+                    attention_mask=fama_mask, # Passes the 2D [B, T] integer mask
+                    output_hidden_states=True,
+                    return_dict=True
+                )
+                
+                # Extract hidden states matching your native CTC layer (Layer 16)
+                target_layer = int(self.model_config.encoder_ctc_layer)
+                encoder_outs = outs_e.hidden_states[target_layer]
+                
+                # Maintain your uniform design pattern tracking logic
+                if self.model_config.get("pruning_type", None) == "ctc":
+                    encoder_logits = outs_e.get("logits", None)
+                else:
+                    encoder_logits = None
             if self.model_config.encoder_name == "hubert":
                 results = self.encoder(source = audio, padding_mask = 1-audio_mask)
                 if self.model_config.encoder_type == "pretrain":

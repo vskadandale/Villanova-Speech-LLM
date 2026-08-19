@@ -13,9 +13,9 @@ class EncoderProjectorPruning(nn.Module):
         self.cos = nn.CosineSimilarity(dim=2, eps=1e-6)
         self.downsampling_type = config.downsampling_type
         if self.k == 1:
-            linear_size_out = 2048 #int(self.encoder_dim / 2)
+            linear_size_out = 2560 #2048 #int(self.encoder_dim / 2)
         else:
-            linear_size_out = 2048            
+            linear_size_out = 2560 #2048            
         if self.downsampling_type == "linear":
             if self.vocab_size > 0:
                 self.linear1 = nn.Linear(self.vocab_size * self.k, linear_size_out)

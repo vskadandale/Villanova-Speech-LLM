@@ -1,6 +1,9 @@
 import os
 import numpy as np
 import sys
+from whisper.normalizers import BasicTextNormalizer
+
+normalizer = BasicTextNormalizer(remove_diacritics=False) #BasicTextNormalizer()
 
 def build_diff(ref, hyp, path):
     result = []
@@ -71,6 +74,8 @@ def compute_wer(ref_file,
     cer_detail_writer = open(cer_detail_file, 'w')
     for hyp_key in hyp_dict:
         if hyp_key in ref_dict:
+            hyp_dict[hyp_key] = normalizer(' '.join(hyp_dict[hyp_key])).split()
+            ref_dict[hyp_key] = normalizer(' '.join(ref_dict[hyp_key])).split()
             out_item = compute_wer_by_line(hyp_dict[hyp_key], ref_dict[hyp_key])
             
             rst['Wrd'] += out_item['nwords']
