@@ -169,7 +169,7 @@ def compute_wer_by_line(hyp, ref):
 
     match_idx.reverse()
     wrong_cnt = cost_matrix[len_hyp][len_ref]
-    rst['wrong'] = wrong_cnt
+    rst['wrong'] = int(wrong_cnt)
     rst['path'] = match_idx
 
     return rst

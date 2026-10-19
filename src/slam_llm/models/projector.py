@@ -10,12 +10,16 @@ class EncoderProjectorPruning(nn.Module):
         self.encoder_dim = config.encoder_dim
         self.vocab_size = config.ctc_vocab_size
         self.llm_dim = config.llm_dim
+        self.encoder_name = config.encoder_name
         self.cos = nn.CosineSimilarity(dim=2, eps=1e-6)
         self.downsampling_type = config.downsampling_type
         if self.k == 1:
             linear_size_out = 2560 #2048 #int(self.encoder_dim / 2)
         else:
-            linear_size_out = 2560 #2048            
+            linear_size_out = 2560 #2048
+        self.add_layer_norm = config.get("add_layer_norm", False)
+        if self.add_layer_norm:
+            self.layer_norm = nn.LayerNorm(self.encoder_dim * self.k)
         if self.downsampling_type == "linear":
             if self.vocab_size > 0:
                 self.linear1 = nn.Linear(self.vocab_size * self.k, linear_size_out)
@@ -81,25 +85,38 @@ class EncoderProjectorPruning(nn.Module):
         batch_size, seq_len, dim = x.size()
         num_frames_to_discard = seq_len % self.k
 
-        if num_frames_to_discard > 0:
-            y = torch.full((x.size(0),self.k - num_frames_to_discard, x.size(2)), 0.0).to(x.get_device())
-            x = torch.cat((x,y),1)
+        if self.encoder_name == "fama": 
+            if num_frames_to_discard > 0: 
+                x = x[:, :-num_frames_to_discard, :]        
+            if self.downsampling_type == "linear":
+                seq_len = x.size(1)
+                x = x.contiguous().view(batch_size, seq_len // self.k, dim * self.k)
+                if self.add_layer_norm:
+                    x = self.layer_norm(x)
+                x = self.linear1(x)
+                x = self.relu(x)
+                x = self.linear2(x)
 
-        if self.downsampling_type == "linear":
-            seq_len = x.size(1)
-            x = x.contiguous()
-            #print("X2:",x.size())        
-            x = x.view(batch_size, seq_len // self.k, dim * self.k)
-            #print("X3:",x.size())
-            
-            x = self.linear1(x)
-            #print("X4:",x.size())
-            x = self.relu(x)
-            #print("X5:",x.size())
-            x = self.linear2(x)
-            #print("X6:",x.size())
+        else:   
+            if num_frames_to_discard > 0:
+                y = torch.full((x.size(0),self.k - num_frames_to_discard, x.size(2)), 0.0).to(x.get_device())
+                x = torch.cat((x,y),1)
+
+            if self.downsampling_type == "linear":
+                seq_len = x.size(1)
+                x = x.contiguous()
+                #print("X2:",x.size())        
+                x = x.view(batch_size, seq_len // self.k, dim * self.k)
+                #print("X3:",x.size())
+                
+                x = self.linear1(x)
+                #print("X4:",x.size())
+                x = self.relu(x)
+                #print("X5:",x.size())
+                x = self.linear2(x)
+                #print("X6:",x.size())
         
-        elif self.downsampling_type == "avgpool":
+        if self.downsampling_type == "avgpool":
             x = x.unsqueeze(1)
             x = self.avgpool(x)   # [B, 1, 1500, 1280] -> [B, 1, 1500/k, 1280]
             x = x.squeeze(1)

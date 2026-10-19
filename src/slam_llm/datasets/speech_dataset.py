@@ -31,6 +31,7 @@ class SpeechDatasetJsonl(torch.utils.data.Dataset):
         self.IGNORE_INDEX = -100  # The default setting in CrossEntropyLoss
         self.prompt = dataset_config.get("prompt", None)
         self.mel_size = dataset_config.get("mel_size", 80) # 80 for whisper large v1 and v2, 128 for large v3
+        self.ds_rate = dataset_config.get("encoder_projector_ds_rate", None) or 5 # must equal model_config.encoder_projector_ds_rate; 5 when not passed
         # self.prompt_library = [
         #     "Begin by converting the spoken words into written text. ",
         #     "Can you transcribe the speech into a written format? ",
@@ -96,13 +97,13 @@ class SpeechDatasetJsonl(torch.utils.data.Dataset):
             if self.normalize:
                 audio_raw = torch.nn.functional.layer_norm(audio_raw, audio_raw.shape)
             audio_length = len(audio_raw) // 320 # ad-hoc for fairseq 320x downsample
-            audio_length = audio_length // 5 # ad-hoc for 5x fc downsample
+            audio_length = audio_length // self.ds_rate # ad-hoc for fc downsample
         elif self.input_type == "mel":
             audio_raw = whisper.pad_or_trim(audio_raw)
             # audio_raw = np.concatenate((np.zeros(random.randint(0, 16000)), audio_raw, np.zeros(random.randint(0, 16000)))).astype(audio_raw.dtype)[:16000*30]
             audio_mel = whisper.log_mel_spectrogram(audio_raw, n_mels=self.mel_size).permute(1, 0)
             audio_length = (audio_mel.shape[0] + 1) // 2  # ad-hoc for whisper for 2x downsample from mel to feats
-            audio_length = audio_length // 5 # ad-hoc for 5x fc downsample
+            audio_length = audio_length // self.ds_rate # ad-hoc for fc downsample
             # audio_length = calculate_output_length_1d(audio_length, 5, 5, 0) # ad-hoc for 5x cov1d downsample
         if self.fix_length_audio > 0:
             audio_length = self.fix_length_audio

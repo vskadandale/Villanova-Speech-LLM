@@ -401,14 +401,14 @@ class slam_model(nn.Module):
             if self.model_config.encoder_name == "fama":
                 # FAMA's Conformer encoder expects Mel Filterbank inputs [Batch, Frames, 80]
                 input_features = audio_mel if audio_mel is not None else audio
-                
+
                 # Ensure the attention mask is a 2D tensor [Batch, Frames] of integers
-                if audio_mel_mask is not None:
-                    # Cast to long integer so .sum(dim=1) inside FAMA works flawlessly
-                    fama_mask = audio_mel_mask.long()
-                else:
-                    batch_size, max_frames, _ = input_features.shape
-                    fama_mask = torch.ones((batch_size, max_frames), dtype=torch.long, device=input_features.device)
+                if audio_mel_mask is None:
+                    # only fama_dataset.py provides it; speech_dataset.py prepares Whisper inputs (log-mel padded to 30s)
+                    raise ValueError("encoder_name=fama needs fbank features and audio_mel_mask from fama_dataset: "
+                                     "set dataset_config.file=src/slam_llm/datasets/fama_dataset.py:get_fama_dataset")
+                # Cast to long integer so .sum(dim=1) inside FAMA works flawlessly
+                fama_mask = audio_mel_mask.long()
 
                 # Forward pass matching the exact Hugging Face parameter name
                 outs_e = self.encoder(
