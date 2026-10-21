@@ -26,7 +26,9 @@ exp_dir=$run_dir/exp
 llm_name=eurollm-1.7b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2048
-prompt_yaml=prompt.yaml
+#prompt_yaml=prompt.yaml
+#prompt_yaml=prompt_it.yaml
+prompt_yaml=prompt_it.yaml
 #exp_data=voxpopuli 
 #exp_data=cv17_Italian
 exp_data=cv17_Italian
@@ -162,5 +164,5 @@ if [[ -d "$ckpt_path" ]]; then
         
     # 4. Evaluation
     global_wer_file="$master_out_dir/FINAL_GLOBAL_WER_REPORT.txt"
-    python "$run_dir/src/slam_llm/utils/compute_wer_en.py" "${decode_log}_gt" "${decode_log}_pred" "$global_wer_file"
+    python "$run_dir/src/slam_llm/utils/compute_wer.py" "${decode_log}_gt" "${decode_log}_pred" "$global_wer_file"
 fi
