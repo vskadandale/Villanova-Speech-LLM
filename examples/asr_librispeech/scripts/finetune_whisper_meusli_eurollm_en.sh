@@ -58,7 +58,7 @@ lora_alpha=32  # not stored in the file; repo default, which MEUSLI was trained 
 pruning_type=none
 
 # MASTER directory for this threshold
-exp_tag="${encoder_arch}_meusli_{llm_name}"
+exp_tag="${encoder_arch}_meusli_${llm_name}"
 master_out_dir="$exp_dir/ASR_${exp_data}_${exp_tag}"
 mkdir -p "$master_out_dir"
 
@@ -95,7 +95,6 @@ torchrun --nnodes 1 --nproc_per_node 1 "$code_dir/finetune_asr.py" \
     ++model_config.encoder_path="$speech_encoder_path" \
     ++model_config.encoder_dim=$encoder_dim \
     ++model_config.encoder_projector="$encoder_projector" \
-    ++model_config.encoder_prune_thr="$speech_encoder_prune_thr" \
     ++model_config.pruning_type="$pruning_type" \
     ++model_config.ctc_vocab_size="$ctc_vocab_size" \
     ++model_config.normalize=true \
@@ -133,7 +132,6 @@ if [[ -d "$ckpt_path" ]]; then
         ++model_config.llm_dim=$llm_dim \
         ++model_config.encoder_name="$encoder_arch" \
         ++model_config.encoder_ctc_layer="$ctc_layer" \
-        ++model_config.encoder_prune_thr="$speech_encoder_prune_thr" \
         ++model_config.ctc_vocab_size="$ctc_vocab_size" \
         ++model_config.encoder_path="$speech_encoder_path" \
         ++model_config.pruning_type="$pruning_type" \
