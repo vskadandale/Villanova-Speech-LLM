@@ -83,7 +83,8 @@ torchrun --nnodes 1 --nproc_per_node 1 "$code_dir/finetune_st.py" \
     ++train_config.warmup_steps=1000 \
     ++train_config.total_steps=1000000 \
     ++train_config.validation_interval=5000 \
-    ++train_config.batch_size_training=4 \
+    ++train_config.batch_size_training=2 \
+    ++train_config.gradient_accumulation_steps=2 \
     ++train_config.val_batch_size=4 \
     ++train_config.num_workers_dataloader=4 \
     ++train_config.lr=$learn_rate \
