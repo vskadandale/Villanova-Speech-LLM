@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from torch.distributed.fsdp import ShardingStrategy
 
@@ -114,6 +114,9 @@ class DataConfig:
     test_split:str = "validation"
     prompt: Optional[str] = None
     prompts: Optional[List[str]] = None
+    lang_prompts: Optional[Dict[str, str]] = field(default=None, metadata={
+        "help": "{tgt_lang: prompt}; if set, each record gets the prompt of its tgt_lang field instead of prompt"
+    })
     data_path: Optional[str] = None
     max_words: Optional[int] = None
     max_mel: Optional[float] = None

@@ -30,6 +30,8 @@ class SpeechDatasetJsonl(torch.utils.data.Dataset):
         # self.data_list = contents
         self.IGNORE_INDEX = -100  # The default setting in CrossEntropyLoss
         self.prompt = dataset_config.get("prompt", None)
+        # optional {tgt_lang: prompt}: each record gets the prompt of its "tgt_lang" (e.g. en<->it translation); unset = self.prompt for every record
+        self.lang_prompts = dataset_config.get("lang_prompts", None)
         self.mel_size = dataset_config.get("mel_size", 80) # 80 for whisper large v1 and v2, 128 for large v3
         self.ds_rate = dataset_config.get("encoder_projector_ds_rate", None) or 5 # must equal model_config.encoder_projector_ds_rate; 5 when not passed
         # self.prompt_library = [
@@ -110,6 +112,11 @@ class SpeechDatasetJsonl(torch.utils.data.Dataset):
         audio_pseudo = torch.full((audio_length,), -1) # placeholder
 
         prompt = self.prompt
+        if self.lang_prompts:
+            tgt_lang = data_dict.get("tgt_lang", None)
+            if tgt_lang not in self.lang_prompts:
+                raise ValueError(f"lang_prompts has no prompt for tgt_lang={tgt_lang!r} of record {key}")
+            prompt = self.lang_prompts[tgt_lang]
         if prompt is None:
             # prompt = random.choice(self.prompt_library)
             # prompt = "Transcribe speech to text. "
