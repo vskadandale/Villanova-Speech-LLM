@@ -115,7 +115,7 @@ class DataConfig:
     prompt: Optional[str] = None
     prompts: Optional[List[str]] = None
     lang_prompts: Optional[Dict[str, str]] = field(default=None, metadata={
-        "help": "{tgt_lang: prompt}; if set, each record gets the prompt of its tgt_lang field instead of prompt"
+        "help": "{direction or tgt_lang: prompt}, e.g. en2it or it; if set, each record gets the prompt of its {src_lang}2{tgt_lang} direction, else of its tgt_lang, instead of prompt"
     })
     data_path: Optional[str] = None
     max_words: Optional[int] = None

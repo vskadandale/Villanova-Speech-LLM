@@ -1,0 +1,8 @@
+dataset_config:
+    # we put prompt here, because the hydra override in shell script only support a small subset of chars
+    # one prompt per task and direction, picked by each record's {src_lang}2{tgt_lang} (jsonls from data/large_en_it_multitask_preprocessing.py)
+    lang_prompts:
+        en2en: "Transcribe speech to text."  # ASR: MEUSLI's prompt (asr_fama/conf/prompt_meusli.yaml)
+        it2it: "Transcribe speech to text."
+        en2it: "Translate English speech to Italian text. "
+        it2en: "Translate Italian speech to English text. "
