@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=fama_linear_vnova_it2en
+#SBATCH --job-name=fama_linear_vnova_en2it
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16         # Double the dataloader workers for overhead
@@ -31,4 +31,4 @@ ulimit -l unlimited
 export PYTHONUNBUFFERED=1
 
 # Execute your specific logic script
-bash $WORK/Villanova-Speech-LLM/examples/st_europarl/scripts/finetune_fama_linear_vnova_it2en.sh
+bash $WORK/Villanova-Speech-LLM/examples/st_europarl/scripts/finetune_fama_linear_vnova_en2it.sh
