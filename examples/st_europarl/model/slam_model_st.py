@@ -35,6 +35,23 @@ def model_factory(train_config, model_config, **kwargs):
         **kwargs,
     )
 
+    init_ckpt_path = model_config.get("init_ckpt_path", None)
+    if init_ckpt_path is not None:
+        # warm start from a model trained with another encoder (e.g. the Whisper-based MEUSLI): every tensor is
+        # loaded except those under init_ckpt_skip_prefix, which are tied to that encoder and stay freshly initialised
+        logger.info("initializing from: {}".format(init_ckpt_path))
+        init_dict = torch.load(init_ckpt_path, map_location="cpu")
+        skip_prefix = model_config.get("init_ckpt_skip_prefix", None)
+        skipped = [k for k in init_dict if skip_prefix and k.startswith(tuple(skip_prefix.split(",")))]
+        if skip_prefix and not skipped:
+            raise ValueError("init_ckpt_skip_prefix={} matches nothing in {}".format(skip_prefix, init_ckpt_path))
+        for k in skipped:
+            del init_dict[k]
+        unexpected = model.load_state_dict(init_dict, strict=False).unexpected_keys
+        if unexpected:
+            raise ValueError("{} has tensors this model has no place for, e.g. {}".format(init_ckpt_path, unexpected[0]))
+        logger.info("--> took {} tensors, left out {}: {}".format(len(init_dict), len(skipped), skipped))
+
     ckpt_path = kwargs.get(
         "ckpt_path", None
     )  # FIX(MZY): load model ckpt(mainly projector, related to model_checkpointing/checkpoint_handler.py: save_model_checkpoint_peft)
@@ -42,6 +59,19 @@ def model_factory(train_config, model_config, **kwargs):
         logger.info("loading other parts from: {}".format(ckpt_path))
         ckpt_dict = torch.load(ckpt_path, map_location="cpu")
         model.load_state_dict(ckpt_dict, strict=False)
+
+    train_only_prefix = train_config.get("train_only_prefix", None)
+    if train_only_prefix:
+        # freeze every trainable parameter outside the given name prefix(es). save_model_checkpoint_peft writes only
+        # trainable parameters, so decoding such a checkpoint needs the same init_ckpt_path again
+        keep = tuple(train_only_prefix.split(","))
+        for name, param in model.named_parameters():
+            if param.requires_grad and not name.startswith(keep):
+                param.requires_grad = False
+        trainable = [name for name, param in model.named_parameters() if param.requires_grad]
+        if not trainable:
+            raise ValueError("train_only_prefix={} matches no trainable parameter".format(train_only_prefix))
+        logger.info("--> train_only_prefix={}: training only {}".format(train_only_prefix, trainable))
 
     print_model_size(
         model,

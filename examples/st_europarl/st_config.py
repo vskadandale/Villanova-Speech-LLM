@@ -21,6 +21,7 @@ class ModelConfig:
     ctc_vocab_size: Optional[int] = 0 #392
     encoder_path_hf: Optional[str] = None
     encoder_dim: int = 1280
+    add_layer_norm: bool = False
     encoder_projector: str = "linear"
     downsampling_type: str = "linear"
     pruning_type: str = "no"
@@ -35,6 +36,12 @@ class ModelConfig:
         "help": "whether model is only pretrained or finetuned, used for models such as hubert"
     })
     qformer_layers: Optional[int] = None
+    init_ckpt_path: Optional[str] = field(default=None, metadata={
+        "help": "weights to start from, loaded before ckpt_path, e.g. a MEUSLI checkpoint trained with another encoder"
+    })
+    init_ckpt_skip_prefix: Optional[str] = field(default=None, metadata={
+        "help": "tensors of init_ckpt_path under this name prefix are not loaded, e.g. encoder_projector.linear1"
+    })
 
 @dataclass
 class PeftConfig:
@@ -93,6 +100,9 @@ class TrainConfig:
         "help": "whether to freeze llm when finetuning, should be true when use peft finetuning"
     })
     freeze_encoder:bool = False
+    train_only_prefix: Optional[str] = field(default=None, metadata={
+        "help": "if set, only parameters under this name prefix are trained, e.g. encoder_projector.linear1"
+    })
 
 @dataclass
 class DataConfig:
@@ -114,6 +124,9 @@ class DataConfig:
                             })
     mel_size: int = field(default=80, metadata={
         "help": "80 for whisper large v1 and v2, 128 for v3"
+    })
+    encoder_projector_ds_rate: Optional[int] = field(default=None, metadata={
+        "help": "same value as model_config.encoder_projector_ds_rate; required by fama_dataset, speech_dataset falls back to 5"
     })
     normalize: Optional[bool] = field(default=False, metadata={
         "help": "whether input is normalized, used for models such as wavlm"

@@ -2,7 +2,7 @@ import sys
 import os
 import json
 from evaluate import load
-from whisper_normalizer.english import EnglishTextNormalizer
+from whisper.normalizers import BasicTextNormalizer
 
 def parse_slam_file(file_path):
     """Parses SLAM-LLM output files (key \t text)."""
@@ -28,7 +28,7 @@ def main():
 
     # Load resources
     bleu_metric = load("bleu")
-    normalizer = EnglishTextNormalizer()
+    normalizer = BasicTextNormalizer()
 
     # Match data
     gt_dict = parse_slam_file(gt_path)
