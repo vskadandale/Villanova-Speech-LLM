@@ -3,26 +3,24 @@ requires = ["hatchling", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [project]
-name = "slam-llm"
+name = "villanova-speech-llm"
 version = "0.0.1"
-description = "SLAM-LLM is a deep learning toolkit that allows researchers and developers to train custom multimodal large language model (MLLM), focusing on Speech, Language, Audio, Music processing. We provide detailed recipes for training and high-performance checkpoints for inference."
+description = "Speech LLM recipes for ASR and speech translation (English/Italian) with the FAMA or Whisper encoder and the Villanova or EuroLLM language model, built on SLAM-LLM."
 readme = "README.md"
-requires-python = ">=3.8"
+license = { file = "LICENSE" }
+# torch 2.9.1 (the pinned version) needs Python 3.10+; the reference environment uses 3.12
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: Other/Proprietary License",
-    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
 ]
 dynamic = ["dependencies"]
 
-[project.optional-dependencies]
-vllm = ["vllm"]
-tests = ["pytest-mock"]
-auditnlg = ["auditnlg"]
-
 [project.urls]
-"Homepage" = "https://github.com/ddlBoJack/SLAM-LLM"
-"Bug Tracker" = "https://github.com/ddlBoJack/SLAM-LLM/issues"
+"Homepage" = "https://github.com/vskadandale/Villanova-Speech-LLM"
+"Bug Tracker" = "https://github.com/vskadandale/Villanova-Speech-LLM/issues"
+"Upstream (SLAM-LLM)" = "https://github.com/X-LANCE/SLAM-LLM"
 
 [tool.hatch.build]
 exclude = [
