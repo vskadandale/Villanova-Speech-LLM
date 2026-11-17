@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # Per-test-set evaluation of the ST checkpoints, on the same test sets as scripts/asr/bilingual/eval_meusli_en_it_per_testset.sh:
-#   model=multilingual  finetune_fama_meusli_vnova_multilingual.sh (en->it + it->en ST)
+#   model=bilingual  finetune_fama_meusli_vnova_bilingual.sh (en->it + it->en ST)
 #   model=multitask     finetune_fama_meusli_vnova_multitask.sh    (ASR en/it + ST en->it/it->en)
 #
 #   1. large_en_it_by_subset: no re-decoding. CV17 Italian (and the other corpora) are part of the large test set,
 #      so the existing decode is split by corpus, task and direction and scored.
-#   2. voxpopuli_en: decoded. multilingual: en->it ST; multitask: ASR + en->it ST.
+#   2. voxpopuli_en: decoded. bilingual: en->it ST; multitask: ASR + en->it ST.
 #   3. small_en_it (ITALIC it + TED-LIUM en): decoded, multitask only, ASR only (there are no translations of it).
 # WER for ASR (compute_wer.py, same normaliser as scripts/eval/score_by_subset.py), BLEU for ST (compute_bleu.py for Italian
 # targets, compute_bleu_en.py for English targets, as in the training scripts).
@@ -23,7 +23,7 @@ set -euo pipefail
 # Re-running overwrites the contents of this EVAL folder.
 # Set ckpt_path=<.../st_epoch_X_step_Y> to pick a checkpoint; default: the latest one, as in the training scripts.
 
-model=${model:-multilingual}
+model=${model:-bilingual}
 
 # --- Auto-detect Environment ---
 if [[ -d "/stek/vskadandale" ]]; then
@@ -44,11 +44,11 @@ export PYTHONPATH="$run_dir/src"
 cd "$run_dir"
 recipe_dir=src/slam_llm/recipe
 
-# --- Same settings as finetune_fama_meusli_vnova_{multilingual,multitask}.sh ---
+# --- Same settings as finetune_fama_meusli_vnova_{bilingual,multitask}.sh ---
 case "$model" in
-    multilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=prompt_multilingual.yaml; exp_data=large_en_it;           jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
+    bilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=prompt_bilingual.yaml; exp_data=large_en_it;           jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
     multitask)    conf_dir=$run_dir/scripts/multitask/conf; prompt_yaml=prompt_multitask.yaml;    exp_data=large_en_it_multitask; jsonl_dir=$WORK_DIR/data/large_en_it_multitask_jsonl ;;
-    *) echo "model must be multilingual or multitask, not '$model'"; exit 1 ;;
+    *) echo "model must be bilingual or multitask, not '$model'"; exit 1 ;;
 esac
 exp_dir=$run_dir/exp
 llm_name=villanova-2b
@@ -155,7 +155,7 @@ python "$helper" score "$large_test_jsonl" "$ckpt_path/decode_test" "$large_dir"
 
 # 2. voxpopuli_en
 vox_dir="$eval_dir/voxpopuli_en"
-if [[ "$model" == multilingual ]]; then
+if [[ "$model" == bilingual ]]; then
     python "$helper" tag "$vox_dir/test.jsonl" "$vox_st_jsonl:st:en:it"
 else
     python "$helper" tag "$vox_dir/test.jsonl" --key_suffix "$vox_asr_jsonl:asr:en:en" "$vox_st_jsonl:st:en:it"

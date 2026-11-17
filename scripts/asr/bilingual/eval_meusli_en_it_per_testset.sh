@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Per-test-set evaluation of the multilingual (large_en_it) checkpoint trained by finetune_meusli_en_it.sh.
+# Per-test-set evaluation of the bilingual (large_en_it) checkpoint trained by finetune_meusli_en_it.sh.
 #
 #   1. large_en_it_by_subset: no re-decoding. CV17 Italian (and the other large_en_it subsets) are part of the
 #      large_en_it test set with the same keys and references, so the existing decode is split per subset and scored.

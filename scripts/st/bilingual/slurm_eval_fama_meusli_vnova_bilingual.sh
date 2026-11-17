@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=fama_meusli_vnova_multilingual_eval
+#SBATCH --job-name=fama_meusli_vnova_bilingual_eval
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8          # inference uses 1 dataloader worker; 8 = one GPU's share of a node
@@ -30,4 +30,4 @@ ulimit -l unlimited
 export PYTHONUNBUFFERED=1
 
 # Execute your specific logic script
-model=multilingual bash $WORK/Villanova-Speech-LLM/scripts/eval/eval_fama_meusli_vnova_per_testset.sh
+model=bilingual bash $WORK/Villanova-Speech-LLM/scripts/eval/eval_fama_meusli_vnova_per_testset.sh

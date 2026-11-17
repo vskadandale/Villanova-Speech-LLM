@@ -35,7 +35,7 @@ Dev: 394 samples (01:02:45)
 Test: 647 samples (01:46:27)
 
 -------------------------------------------------------------------------------------------------------
-COMBINED MULTILINGUAL TRAINING DATA
+COMBINED BILINGUAL TRAINING DATA
 1. CV17 (en, it): mix top {169.771 (train), 15.149(dev), 15.155(test)}
 
 2. FLEURS (en, it): mix top {2.602 (train), 391 (dev),  647(test)}

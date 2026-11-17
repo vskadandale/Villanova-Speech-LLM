@@ -1,6 +1,6 @@
-"""Helpers for eval_fama_meusli_vnova_per_testset.sh (multilingual ST and multitask ASR+ST checkpoints).
+"""Helpers for eval_fama_meusli_vnova_per_testset.sh (bilingual ST and multitask ASR+ST checkpoints).
 
-tag: write a jsonl that the multilingual / multitask prompts can decode, from test sets without language fields
+tag: write a jsonl that the bilingual / multitask prompts can decode, from test sets without language fields
     python eval_subsets.py tag <out.jsonl> [--key_suffix] <jsonl>:<task>:<src_lang>:<tgt_lang> ...
     every record of <jsonl> gets task, src_lang, tgt_lang (src_lang "auto" = from the corpus of its audio path,
     tgt_lang "same" = src_lang); --key_suffix appends _<task> to the keys, as in large_en_it_multitask_jsonl.
