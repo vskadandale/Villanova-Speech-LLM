@@ -3,7 +3,7 @@
 Verify CUDA version: module load cuda
 Last time I checked it was 12.2
 
-conda create -n vnonva python=3.12.3 -y
+conda create -n vnova python=3.12.3 -y
 conda activate vnova
 
 pip install --no-cache-dir --upgrade pip
