@@ -1,0 +1,13 @@
+# Large or local-only content; mount models/ and data at run time instead
+.git
+models/
+exp/
+outputs/
+wandb/
+log/
+**/*.log
+**/__pycache__
+**/.ipynb_checkpoints
+.vscode
+.idea
+.DS_Store
