@@ -6,7 +6,6 @@ import time
 import yaml
 from contextlib import nullcontext
 from pathlib import Path
-from pkg_resources import packaging
 import datetime
 
 import functools
