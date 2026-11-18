@@ -46,8 +46,8 @@ recipe_dir=src/slam_llm/recipe
 
 # --- Same settings as finetune_fama_meusli_vnova_{bilingual,multitask}.sh ---
 case "$model" in
-    bilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=prompt_bilingual.yaml; exp_data=large_en_it;           jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
-    multitask)    conf_dir=$run_dir/scripts/multitask/conf; prompt_yaml=prompt_multitask.yaml;    exp_data=large_en_it_multitask; jsonl_dir=$WORK_DIR/data/large_en_it_multitask_jsonl ;;
+    bilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=translate_bilingual.yaml; exp_data=large_en_it;           jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
+    multitask)    conf_dir=$run_dir/scripts/multitask/conf; prompt_yaml=multitask.yaml;    exp_data=large_en_it_multitask; jsonl_dir=$WORK_DIR/data/large_en_it_multitask_jsonl ;;
     *) echo "model must be bilingual or multitask, not '$model'"; exit 1 ;;
 esac
 exp_dir=$run_dir/exp

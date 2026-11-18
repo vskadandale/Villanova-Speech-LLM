@@ -1,6 +1,0 @@
-dataset_config:
-    # we put prompt here, because the hydra override in shell script only support a small subset of chars
-    # one prompt per translation direction, picked by each record's tgt_lang (jsonls from data/large_en_it_st_preprocessing.py)
-    lang_prompts:
-        it: "Translate English speech to Italian text. "
-        en: "Translate Italian speech to English text. "

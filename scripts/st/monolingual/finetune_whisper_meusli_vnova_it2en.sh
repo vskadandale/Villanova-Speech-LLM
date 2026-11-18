@@ -27,7 +27,7 @@ exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
-prompt_yaml=prompt_it2en.yaml
+prompt_yaml=translate_it2en.yaml
 exp_data=cv17_Italian_it2en
 ds_rate=5 # MEUSLI's rate: its linear1 takes 5 Whisper frames x 1280 = 6400
 learn_rate=1e-4

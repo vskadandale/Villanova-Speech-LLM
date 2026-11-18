@@ -1,0 +1,5 @@
+# Prompts live in YAML because Hydra command-line overrides only accept a small set of characters.
+# Keep each string exactly as is, trailing spaces included: checkpoints were trained with these prompts.
+# Language-agnostic ASR prompt, as used by MEUSLI.
+dataset_config:
+    prompt: "Transcribe speech to text."

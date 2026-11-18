@@ -1,0 +1,7 @@
+# Prompts live in YAML because Hydra command-line overrides only accept a small set of characters.
+# Keep each string exactly as is, trailing spaces included: checkpoints were trained with these prompts.
+# One prompt per direction, picked by each record's {src_lang}2{tgt_lang} (data/large_en_it_st_preprocessing.py).
+dataset_config:
+    lang_prompts:
+        en2it: "Translate English speech to Italian text. "
+        it2en: "Translate Italian speech to English text. "
