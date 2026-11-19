@@ -51,7 +51,7 @@ speech_encoder_path="$run_dir/models/fama-medium-asr"
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
 
-meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt" # = HF SpeechTek/MEUSLI_projector_v2: projector 6400->2048->2560 + LoRA on villanova-2b
+meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt" # = HF SpeechTek/MEUSLI_projector_v2_Villanova_2B: projector 6400->2048->2560 + LoRA on villanova-2b
 lora_rank=32    # rank of the LoRA stored in that file (q_proj, v_proj on all 18 layers)
 lora_alpha=32  # not stored in the file; repo default, which MEUSLI was trained with
 init_skip_prefix=encoder_projector.linear1  # 6400 = 5 Whisper frames x 1280: not loaded, re-initialised as 1024*ds_rate -> 2048

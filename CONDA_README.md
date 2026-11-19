@@ -33,6 +33,8 @@ mv $WORK/Villanova-Speech-LLM/models/eurollm-1.7b/pytorch_model.bin $WORK/Villan
 
 wget https://huggingface.co/SpeechTek/MEUSLI_projector_v2/resolve/main/model.pt
 mv model.pt meusli-eurollm-1.7b.pt
+wget https://huggingface.co/SpeechTek/MEUSLI_projector_v2_Villanova_2B/resolve/main/model.pt
+mv model.pt meusli-villanova-2b.pt
 
 wget https://openaipublic.azureedge.net/main/whisper/models/aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a/large-v3-turbo.pt
 mkdir -p ~/.cache/whisper && cp /leonardo_work/IscrC_COBRAS/Villanova-Speech-LLM/models/large-v3-turbo.pt ~/.cache/whisper/

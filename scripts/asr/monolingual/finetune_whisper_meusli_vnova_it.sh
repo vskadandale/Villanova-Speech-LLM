@@ -49,7 +49,7 @@ speech_encoder_path="$run_dir/models/large-v3-turbo.pt"
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
 # --- MEUSLI warm start: same Whisper encoder MEUSLI was trained with, so every tensor of the checkpoint is loaded ---
-meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt" # = HF SpeechTek/MEUSLI_projector_v2: projector 6400->2048->2048 + LoRA on villanova-2b
+meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt" # = HF SpeechTek/MEUSLI_projector_v2_Villanova_2B: projector 6400->2048->2560 + LoRA on villanova-2b
 lora_rank=32    # rank of the LoRA stored in that file (q_proj, v_proj on all 24 layers)
 lora_alpha=32  # not stored in the file; repo default, which MEUSLI was trained with
 # projector and LoRA are trained, Whisper and EuroLLM stay frozen. model.pt then holds every tensor of the MEUSLI file,

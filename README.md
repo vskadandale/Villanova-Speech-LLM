@@ -1,240 +1,213 @@
-<div align="center">
-    <h1>
-    SLAM-LLM
-    </h1>
-    <p>
-    <b>SLAM-LLM</b> is a deep learning toolkit that allows researchers and
-developers to train custom multimodal large language model (MLLM), focusing on <b>S</b>peech, <b>L</b>anguage, <b>A</b>udio, <b>M</b>usic processing. We provide detailed recipes for training and high-performance checkpoints for inference. <br>
-    </p>
-    <p>
-    <img src="docs/logo.jpg" alt="SLAM-LLM Logo" style="width: 200px; height: 200px;">
-    </p>
-    <p>
-    </p>
-    <a href="https://github.com/ddlBoJack/SLAM-LLM"><img src="https://img.shields.io/badge/Platform-linux-lightgrey" alt="version"></a>
-    <a href="https://github.com/ddlBoJack/SLAM-LLM"><img src="https://img.shields.io/badge/Cuda-11.8+-orange" alt="version"></a>
-    <a href="https://github.com/ddlBoJack/SLAM-LLM"><img src="https://img.shields.io/badge/PyTorch-2.01+-brightgreen" alt="python"></a>
-    <a href="https://github.com/ddlBoJack/SLAM-LLM"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="mit"></a>
-</div>
+# Villanova-Speech-LLM
 
-# Table of Contents
-1. [News](#news)
-2. [Installation](#installation)
-3. [Usage](#usage)
-    - [List of Recipes](#list-of-recipes)
-    - [Configuration Priority](#configuration-priority)
-4. [Features](#features)
-5. [Acknowledge](#acknowledge)
-6. [Citation](#citation)
+Speech LLMs for **automatic speech recognition (ASR)** and **speech translation (ST)** in English and Italian.
+A frozen speech encoder ([FAMA](https://huggingface.co/FBK-MT/fama-medium-asr) or
+[Whisper large-v3-turbo](https://github.com/openai/whisper)) is connected through a trained projector to a frozen LLM
+([Villanova-2B](https://huggingface.co/VillanovaAI/Villanova-2B-2603) or
+[EuroLLM-1.7B](https://huggingface.co/utter-project/EuroLLM-1.7B)) that is adapted with LoRA.
 
-# News
-- [Update Jan. 15, 2026] The [SLAM-LLM Framework](https://arxiv.org/abs/2601.09385v1) was accepted by IEEE Journal of Selected Topics in Signal Processing (JSTSP), where we put the framework design and some unpublished experiments and insights for speech, audio, and music MLLM. 
-- [Update Apr. 24, 2025] We have supported [large-scale industrial training](examples/aispeech_asr/README.md), suitable for datasets on the order of 100,000 hours. Its main features include:
-  - **Support for multi-task training:** Designed to support tasks such as ASR and ST through a unified data format. 
-  - **Dynamic prompt selection:** Supports random selection from multiple prompts. 
-  - **Iterative dataset:** Uses an iterative dataset format to reduce startup time for large datasets. 
-  - **Deepspeed training:** Supports DeepSpeed training to significantly reduce memory usage.
-  - **Multi-machine multi-GPU inference:** Supports distributed inference across multiple machines and GPUs to reduce evaluation time.
-  - **Dynamic frame batching:** Dynamically combines frames based on audio size rather than using a fixed batch size, significantly reducing training and evaluation time (reduces training time by 3/4 for 100,000 hours of data).
-- [Update Apr. 24, 2025] We have supported the Deepspeed, checkout the instruction #Fine-tuning using Deepspeed at [here](examples/asr_librispeech/README.md).
-- [Update Jan. 22, 2025] 🔥🔥🔥 Full reproduction (including all data preparation, model training, and inference) for [SLAM-Omni](examples/s2s/README.md) has been supported.  
-![](docs/slam-omni-model.png)
-  - SLAM-Omni is a **timbre-controllable** voice interaction system that requires only **single-stage training** and minimal resources to achieve high-quality, end-to-end speech dialogue, supporting multi-turn conversations in both Chinese and English. ([paper](https://arxiv.org/abs/2412.15649), [demo](https://slam-omni.github.io))
-  - We have fully reproduced the **training and inference** processes of SLAM-Omni and open-sourced all related training datasets. The provided code framework theoretically supports all codec-based spoken dialogue models. Additionally, we offer the reproduction code for [Mini-Omni](https://github.com/gpt-omni/mini-omni).
+The code is a fork of [SLAM-LLM](https://github.com/X-LANCE/SLAM-LLM), reduced to the ASR and ST recipes behind the
+results below.
 
-<table class="center">
-<tr>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/user-attachments/assets/73597edb-0d66-453b-b10c-8cf8dd3cae18" muted="false"></video>
-    </td>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/user-attachments/assets/7a797491-0509-4da8-8662-f2107bd8856a" muted="false"></video>
-    </td>
-</tr>
-</table>
+## Results
 
-- [Update Nov. 17, 2024] Recipes for [LLM-Based Contextual ASR](examples/contextual_asr/README.md) have been supported. 
-- [Update Nov. 5, 2024] Recipes for [speech emotion captioning (SEC)](examples/sec_emotioncaps/README.md) with [emotion2vec](https://github.com/ddlBoJack/emotion2vec) as the encoder has been supported.
-- [Update Oct. 12, 2024] Recipes for [SLAM-AAC](examples/slam_aac/README.md) with [EAT](https://github.com/cwx-worst-one/EAT) as the encoder have been supported. 
-- [Update Sep. 28, 2024] Recipes for [CoT-ST](examples/st_covost2/README.md) have been supported. 
-- [Update Sep. 25, 2024] Recipes for [DRCap](examples/drcap_zeroshot_aac/README.md) have been supported. 
-- [Update Jun. 12, 2024] Recipes for [MaLa-ASR](examples/mala_asr_slidespeech/README.md) have been supported. 
-- **[CALL FOR EXAMPLE]** We sincerely invite developers and researchers to develop new applications, conduct academic research based on SLAM-LLM, and pull request your examples! We also acknowledge engineering PR (such as improving and speeding up multi-node training). 
-- [Update May. 22, 2024] Please join [slack](https://join.slack.com/t/slam-llm/shared_invite/zt-2mc0pkhhs-5jjOi8Cwc8R1Xc8IQmykDA) or [WeChat group](./docs/Wechat.jpg). We will sync our updates and Q&A here. 
-- [Update May. 21, 2024] Recipes for [Spatial Audio Understanding](examples/seld_spatialsoundqa/README.md) have been supported. 
-- [Update May. 20, 2024] Recipes for [music caption (MC)](examples/mc_musiccaps/README.md) have been supported. 
-- [Update May. 8, 2024] Recipes for [visual speech recognition (VSR)](examples/vsr_LRS3/README.md) have been supported. 
-- [Update May. 4, 2024] Recipes for [zero-shot text-to-speech (TTS)](examples/vallex/README.md) have been supported. 
-- [Update Apr. 28, 2024] Recipes for [automated audio captioning (AAC)](examples/aac_audiocaps/README.md) have been supported. 
-- [Update Mar. 31, 2024] Recipes for [automatic speech recognition (ASR)](examples/asr_librispeech/README.md) have been supported. 
+### Monolingual models
 
-# Installation
+One model per task and language. IT is trained and tested on Common Voice 17 Italian, EN on VoxPopuli English.
+
+| Encoder | Projector init | LLM | ASR IT (WER ↓) | ASR EN (WER ↓) | ST IT→EN (BLEU ↑) | ST EN→IT (BLEU ↑) |
+|---|---|---|---|---|---|---|
+| FAMA | scratch | Villanova-2B | 7.68 | 6.86 | 56.18 | 58.30 |
+| FAMA | MEUSLI | Villanova-2B | 7.34 | 6.55 | 55.66 | 57.75 |
+| Whisper | MEUSLI | Villanova-2B | 6.08 | 7.09 | 56.87 | 56.22 |
+| Whisper | MEUSLI | EuroLLM-1.7B | 6.31 | 6.67 | 60.86 | 62.19 |
+
+### Bilingual models (FAMA × MEUSLI × Villanova-2B)
+
+One model for both languages, trained and tested on `large_en_it`: Common Voice 17 + FLEURS for both languages,
+plus MLS (IT) and LibriSpeech (EN), with English cut to the Italian sample counts. These numbers are not comparable
+with the monolingual ones.
+
+| Training tasks | ASR IT (WER ↓) | ASR EN (WER ↓) | ST IT→EN (BLEU ↑) | ST EN→IT (BLEU ↑) |
+|---|---|---|---|---|
+| ASR only | 8.45 | 11.94 | – | – |
+| ST only | – | – | 49.25 | 41.26 |
+| ASR + ST (multitask) | 8.70 | 11.88 | 50.95 | 41.25 |
+
+**How to read these numbers**
+
+- **ST references are synthetic.** The ST targets (training and test) are translations of the ASR transcripts made
+  with [EuroLLM-1.7B-Instruct](https://huggingface.co/utter-project/EuroLLM-1.7B-Instruct)
+  (see `data/*_st_*_preprocessing.py`).
+- **Text normalisation.** The data loader lowercases targets. WER is computed without punctuation, after Whisper's
+  `BasicTextNormalizer` (`EnglishTextNormalizer` for English). BLEU is computed on normalised text.
+- **Projector init.** "scratch" trains the projector from random initialisation. "MEUSLI" starts from a MEUSLI
+  checkpoint (a Whisper projector + LoRA trained for that LLM). With FAMA, the projector's first layer does not fit
+  FAMA's output size, so it is re-initialised and the rest is loaded.
+- **Prompts.** Monolingual ASR uses a language-specific prompt ("Transcribe Italian speech to text."); bilingual and
+  multitask ASR use a generic one ("Transcribe speech to text."), since the language is not given. ST prompts always
+  name the direction. All prompts are in `scripts/*/conf/`.
+- **Whisper truncates audio to 30 s**, which affects long utterances (about 1,200 in VoxPopuli EN). FAMA has no such
+  limit.
+
+## Repository layout
+
+```
+scripts/
+  asr/
+    conf/          prompts (transcribe*.yaml)
+    monolingual/   one model per language: finetune_<encoder>_<projector init>_<llm>_<en|it>.sh
+    bilingual/     one model for en+it, plus its per-test-set evaluation
+  st/
+    conf/          prompts (translate_*.yaml)
+    monolingual/   one model per direction: finetune_<encoder>_<projector init>_<llm>_<en2it|it2en>.sh
+    bilingual/     one model for both directions
+  multitask/       one model for ASR (en, it) + ST (en→it, it→en)
+  eval/            per-test-set evaluation of the bilingual ST and multitask models
+src/slam_llm/
+  recipe/          entry points shared by all scripts (finetune.py, inference_batch.py), config, model
+  ...              SLAM-LLM library code (encoders, projectors, datasets, training loop)
+data/              scripts that turn each corpus into the jsonl format below
+```
+
+Every training script has a `slurm_*.sh` wrapper next to it for Slurm clusters.
+
+## Setup
+
+### Environment
+
+Python 3.12, CUDA 12.8, and the pinned packages in `requirements.txt`:
+
 ```bash
-git clone https://github.com/huggingface/transformers.git
-cd transformers
-git checkout tags/v4.35.2
+pip install torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1 --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements.txt
 pip install -e .
-cd ..
-git clone https://github.com/huggingface/peft.git
-cd peft
-git checkout tags/v0.6.0
-pip install -e .
-cd ..
-pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
-git clone https://github.com/ddlBoJack/SLAM-LLM.git
-cd SLAM-LLM
-pip install  -e .
 ```
 
-For some examples, you may need to use `fairseq`, the command line is as follows:
-```
-# you need to install fairseq before SLAM-LLM
-git clone https://github.com/pytorch/fairseq
-cd fairseq
-pip install --editable ./
-```
-We also provide a docker image for convenience:
-```shell
-# build docker image
-docker build -t slam-llm:latest .
+[`CONDA_README.md`](CONDA_README.md) has the full conda setup used for the results, and the `Dockerfile` builds the
+same environment:
 
-# run docker image with gpu
-docker run -it --gpus all --name slam --shm-size=256g slam-llm:latest /bin/bash
-```
-# Usage
-## List of Recipes
-We provide reference implementations of various LLM-based speech, audio, and music tasks: 
-- **Speech Task**
-    - Automatic Speech Recognition (ASR)
-        - [SLAM-ASR](examples/asr_librispeech/README.md)
-    
-    - Contextual Automatic Speech Recognition (CASR)
-        - [ Mala-ASR](examples/mala_asr_slidespeech/README.md)
-        - [LLM-Based Contextual ASR](examples/contextual_asr/README.md)
-    
-    - [Visual Speech Recognition (VSR)](examples/vsr_LRS3/README.md) 
-    - Speech-to-Text Translation (S2TT)
-        - [CoT-ST](examples/st_covost2/README.md)
-    
-    - Text-to-Speech (TTS)
-        - [VALL-E-X](examples/vallex/README.md)
-    - [Speech Emotion Captioning (SEC)](examples/sec_emotioncaps/README.md)
-    - Voice Interaction System
-        - [SLAM-Omni](examples/s2s/README.md)
-    
-- **Audio Task**
-    - [Automated Audio Captioning (AAC)](examples/aac_audiocaps/README.md)
-      - [SLAM-AAC](examples/slam_aac/README.md)
-      - [DRCap](examples/drcap_zeroshot_aac/README.md)
-  
-    - Spatial Audio Understanding
-      - [BAT](examples/seld_spatialsoundqa/README.md)
-    
-- **Music Task**
-    - [Music Caption (MC)](examples/mc_musiccaps/README.md)
-
-## Configuration Priority
-We provide hierarchical configuration inheritance relationships as follows:
-```
-command-line (shell file) > Hydra configuration (yaml file) > dataclass configuration (Python file)
+```bash
+docker build -t villanova-speech-llm .
+docker run -it --gpus all --shm-size=64g villanova-speech-llm
 ```
 
-# Features
-- Easily extend to new models and tasks.
-- Detailed recipes for training and high-performance checkpoints for inference.
-- Mixed precision training which trains faster with less GPU memory on NVIDIA tensor cores. 
-- Multi-GPU training with data and model parallel, supporting [DDP](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html), [FSDP](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html) and [deepspeed](https://github.com/microsoft/DeepSpeed) (still need to be improved).  
-- Flexible configuration based on [Hydra](https://github.com/facebookresearch/hydra) and [dataclass](https://docs.python.org/3/library/dataclasses.html) allowing a combination of code, command-line and file based configuration. 
+### Folder layout
 
-# Acknowledge
-- We borrow code from [Llama-Recipes](https://github.com/meta-llama/llama-recipes) for the training process. 
-- We borrow code from [Fairseq](https://github.com/facebookresearch/fairseq) for deepspeed configuration. 
-- We thank the contributors for providing diverse recipes. 
+The scripts expect the repository and the data side by side under `$WORK`:
 
-# Citation
-SLAM-LLM Framework:
 ```
+$WORK/
+  Villanova-Speech-LLM/   this repository
+    models/               encoders, LLMs and MEUSLI checkpoints (below)
+    exp/                  outputs, created by the scripts
+  data/                   jsonl manifests (below)
+```
+
+### Models
+
+Download these into `models/` under the names the scripts use:
+
+| File or folder in `models/` | Source |
+|---|---|
+| `fama-medium-asr/` | [FBK-MT/fama-medium-asr](https://huggingface.co/FBK-MT/fama-medium-asr) |
+| `large-v3-turbo.pt` | [Whisper large-v3-turbo](https://openaipublic.azureedge.net/main/whisper/models/aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a/large-v3-turbo.pt) |
+| `villanova-2b/` | [VillanovaAI/Villanova-2B-2603](https://huggingface.co/VillanovaAI/Villanova-2B-2603) |
+| `eurollm-1.7b/` | [utter-project/EuroLLM-1.7B](https://huggingface.co/utter-project/EuroLLM-1.7B) |
+| `meusli-eurollm-1.7b.pt` | [SpeechTek/MEUSLI_projector_v2](https://huggingface.co/SpeechTek/MEUSLI_projector_v2) (`model.pt`) |
+| `meusli-villanova-2b.pt` | [SpeechTek/MEUSLI_projector_v2_Villanova_2B](https://huggingface.co/SpeechTek/MEUSLI_projector_v2_Villanova_2B) (`model.pt`) |
+
+For example:
+
+```bash
+cd models
+hf download FBK-MT/fama-medium-asr --local-dir fama-medium-asr
+hf download VillanovaAI/Villanova-2B-2603 --local-dir villanova-2b
+hf download utter-project/EuroLLM-1.7B --local-dir eurollm-1.7b
+```
+
+## Data
+
+Each split is a jsonl file with one utterance per line:
+
+```json
+{"key": "Italian_it_12997_st", "source": "/path/to/12997.mp3", "target": "Massimo Conti.", "task": "st", "src_lang": "it", "tgt_lang": "en"}
+```
+
+`key`, `source` (audio path) and `target` are required. `src_lang` and `tgt_lang` select the prompt in the bilingual
+and multitask setups, and `task` (`asr` or `st`) is used to split multitask results.
+
+The scripts in `data/` build these files from the original corpora (Common Voice 17, VoxPopuli, FLEURS, MLS,
+LibriSpeech, ITALIC, TED-LIUM, Europarl-ST). The ST sets are derived from the ASR sets by translating the targets
+with EuroLLM-1.7B-Instruct. The training scripts read `train.jsonl`, `val.jsonl` and `test.jsonl` from these folders
+in `$WORK/data/`:
+
+| Folder | Used by |
+|---|---|
+| `voxpopuli_jsonl`, `cv17_Italian_it_jsonl` | monolingual ASR (EN, IT) |
+| `voxpopuli_en2it_jsonl`, `cv17_Italian_it2en_jsonl` | monolingual ST (EN→IT, IT→EN) |
+| `large_en_it_jsonl` | bilingual ASR |
+| `large_en_it_st_jsonl` | bilingual ST |
+| `large_en_it_multitask_jsonl` | multitask |
+| `small_en_it_jsonl` | extra evaluation (ITALIC IT + TED-LIUM EN) |
+
+## Training and evaluation
+
+Each script trains one model on one GPU, decodes the test set with the last checkpoint and scores it:
+
+```bash
+export WORK=/path/to/work                      # the folder that holds Villanova-Speech-LLM/ and data/
+bash scripts/asr/monolingual/finetune_fama_meusli_vnova_it.sh
+# or, on a Slurm cluster (edit the account/partition lines first):
+sbatch scripts/asr/monolingual/slurm_finetune_fama_meusli_vnova_it.sh
+```
+
+Outputs go to `exp/<task>_<data>_<encoder>_<projector init>_<llm>/`, e.g. `exp/ASR_cv17_it_fama_meusli_vnova/`:
+
+```
+train.log, inference.log
+asr_epoch_<E>_step_<S>/            checkpoint (model.pt), decode_test_gt / decode_test_pred
+FINAL_GLOBAL_WER_REPORT.txt        (FINAL_GLOBAL_BLEU_REPORT*.txt for ST)
+```
+
+The bilingual and multitask models are also evaluated per test set (each corpus of `large_en_it`, VoxPopuli EN and
+`small_en_it`):
+
+```bash
+bash scripts/asr/bilingual/eval_fama_meusli_vnova_bilingual.sh                  # bilingual ASR
+model=bilingual bash scripts/eval/eval_fama_meusli_vnova_per_testset.sh          # bilingual ST
+model=multitask bash scripts/eval/eval_fama_meusli_vnova_per_testset.sh          # multitask
+```
+
+Results go to `exp/EVAL_<training folder>/<checkpoint>/`. Set `ckpt_path=...` to evaluate a checkpoint other than
+the latest.
+
+Configuration follows SLAM-LLM's priority: command-line overrides in the shell script > the prompt yaml in `conf/` >
+the dataclass defaults in `src/slam_llm/recipe/speech_config.py`.
+
+## Checkpoints
+
+The trained models are available at: **TODO link**.
+
+## Acknowledgements
+
+This repository builds on [SLAM-LLM](https://github.com/X-LANCE/SLAM-LLM) (MIT license), and uses
+[FAMA](https://huggingface.co/FBK-MT/fama-medium-asr), [Whisper](https://github.com/openai/whisper),
+[Villanova](https://huggingface.co/VillanovaAI), [EuroLLM](https://huggingface.co/utter-project) and the
+MEUSLI projector checkpoints ([EuroLLM](https://huggingface.co/SpeechTek/MEUSLI_projector_v2),
+[Villanova](https://huggingface.co/SpeechTek/MEUSLI_projector_v2_Villanova_2B)).
+
+If you use this code, please also cite SLAM-LLM:
+
+```bibtex
 @article{ma2026slam,
   title={SLAM-LLM: A Modular, Open-Source Multimodal Large Language Model Framework and Best Practice for Speech, Language, Audio and Music Processing},
   author={Ma, Ziyang and Yang, Guanrou and Chen, Wenxi and Gao, Zhifu and Du, Yexing and Li, Xiquan and Zheng, Zhisheng and Zhu, Haina and others},
-  journal={Proc. IEEE Journal of Selected Topics in Signal Processing},
+  journal={IEEE Journal of Selected Topics in Signal Processing},
   year={2026}
 }
 ```
 
-## Speech Task
+## License
 
-SLAM-ASR:
-```
-@article{ma2025speech,
-  title={Speech Recognition Meets Large Language Model: Benchmarking, Models, and Exploration},
-  author={Ma, Ziyang and Yang, Guanrou and Yang, Yifan and Gao, Zhifu and Wang, Jiaming and Du, Zhihao and Yu, Fan and Chen, Qian and Zheng, Siqi and Zhang, Shiliang and others},
-  journal={Proc. AAAI},
-  year={2025}
-}
-```
-Mala-ASR:
-```
-@article{yang2024mala,
-  title={MaLa-ASR: Multimedia-Assisted LLM-Based ASR},
-  author={Yang, Guanrou and Ma, Ziyang and Yu, Fan and Gao, Zhifu and Zhang, Shiliang and Chen, Xie},
-  journal={Proc. INTERSPEECH},
-  year={2024}
-}
-```
-LLM-Based Contextual ASR:
-```
-@article{yang2024ctc,
-  title={CTC-Assisted LLM-Based Contextual ASR},
-  author={Yang, Guanrou and Ma, Ziyang and Gao, Zhifu and Zhang, Shiliang and Chen, Xie},
-  journal={Proc. SLT},
-  year={2024}
-}
-```
-SLAM-Omni:
-```
-@article{chen2024slam,
-  title={SLAM-Omni: Timbre-Controllable Voice Interaction System with Single-Stage Training},
-  author={Chen, Wenxi and Ma, Ziyang and Yan, Ruiqi and Liang, Yuzhe and Li, Xiquan and Xu, Ruiyang and Niu, Zhikang and Zhu, Yanqiao and Yang, Yifan and Liu, Zhanxun and others},
-  journal={Proc. ACL},
-  year={2025}
-}
-```
-CoT-ST:
-```
-@article{du2024cot,
-  title={CoT-ST: Enhancing LLM-based Speech Translation with Multimodal Chain-of-Thought},
-  author={Du, Yexing and Ma, Ziyang and Yang, Yifan and Deng, Keqi and Chen, Xie and Yang, Bo and Xiang, Yang and Liu, Ming and Qin, Bing},
-  journal={Proc. ACL},
-  year={2025}
-}
-```
-
-## Audio Task
-SLAM-AAC:
-```
-@article{chen2025slam,
-  title={SLAM-AAC: Enhancing Audio Captioning with Paraphrasing Augmentation and CLAP-Refine through LLMs},
-  author={Chen, Wenxi and Ma, Ziyang and Li, Xiquan and Xu, Xuenan and Liang, Yuzhe and Zheng, Zhisheng and Yu, Kai and Chen, Xie},
-  journal={Proc. ICASSP},
-  year={2025}
-}
-```
-DRCap:
-```
-@article{li2025drcap,
-  title={DRCap: Decoding CLAP Latents with Retrieval-augmented Generation for Zero-shot Audio Captioning},
-  author={Li, Xiquan and Chen, Wenxi and Ma, Ziyang and Xu, Xuenan and Liang, Yuzhe and Zheng, Zhisheng and Kong, Qiuqiang and Chen, Xie},
-  journal={Proc. ICASSP},
-  year={2025}
-}
-```
-BAT:
-```
-@article{zheng2024bat,
-  title={BAT: Learning to Reason about Spatial Sounds with Large Language Models},
-  author={Zheng, Zhisheng and Peng, Puyuan and Ma, Ziyang and Chen, Xie and Choi, Eunsol and Harwath, David},
-  journal={Proc. ICML},
-  year={2024}
-}
-```
+MIT, see [LICENSE](LICENSE).
