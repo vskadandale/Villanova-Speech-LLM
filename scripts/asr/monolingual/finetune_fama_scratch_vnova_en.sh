@@ -32,7 +32,7 @@ prompt_yaml=transcribe_en.yaml
 ds_rate=2
 learn_rate=1e-4
 ctc_layer=24 #16
-encoder_projector="pruning"
+encoder_projector="linear"
 downsampling_type="linear"
 ctc_vocab_size=-1
 speech_encoder_pad=0
@@ -44,7 +44,6 @@ dataset_type=fama_dataset
 encoder_dim=1024
 mel_size=80
 speech_encoder_path="$run_dir/models/fama-medium-asr"
-add_layer_norm=true
 # dataset_config.file is what selects the dataset class, dataset_config.dataset is only a label
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
@@ -82,7 +81,6 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++model_config.encoder_name="$encoder_arch" \
     ++model_config.encoder_path="$speech_encoder_path" \
     ++model_config.encoder_dim=$encoder_dim \
-    ++model_config.add_layer_norm=$add_layer_norm \
     ++model_config.encoder_projector="$encoder_projector" \
     ++model_config.encoder_projector_ds_rate="$ds_rate" \
     ++model_config.pruning_type="$pruning_type" \
@@ -126,7 +124,6 @@ if [[ -d "$ckpt_path" ]]; then
         ++model_config.encoder_path="$speech_encoder_path" \
         ++model_config.pruning_type="$pruning_type" \
         ++model_config.encoder_dim=$encoder_dim \
-        ++model_config.add_layer_norm=$add_layer_norm \
         ++model_config.encoder_projector="$encoder_projector" \
         ++model_config.normalize=true \
         ++model_config.downsampling_type="$downsampling_type" \

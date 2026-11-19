@@ -54,7 +54,6 @@ dataset_type=fama_dataset
 encoder_dim=1024
 mel_size=80
 speech_encoder_path="$run_dir/models/fama-medium-asr"
-add_layer_norm=true
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
 meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt"
@@ -110,7 +109,6 @@ decode() {
         ++model_config.encoder_path="$speech_encoder_path" \
         ++model_config.pruning_type="$pruning_type" \
         ++model_config.encoder_dim=$encoder_dim \
-        ++model_config.add_layer_norm=$add_layer_norm \
         ++model_config.encoder_projector="$encoder_projector" \
         ++model_config.normalize=true \
         ++model_config.downsampling_type="$downsampling_type" \

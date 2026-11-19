@@ -32,7 +32,7 @@ prompt_yaml=transcribe_en.yaml
 ds_rate=5 # MEUSLI's rate: its linear1 takes 5 Whisper frames x 1280 = 6400
 learn_rate=1e-4
 ctc_layer=24 #16
-encoder_projector="linear" # MEUSLI's projector: linear1 -> ReLU -> linear2 with a 2048 hidden layer ("pruning" uses 2560)
+encoder_projector="linear" # MEUSLI's projector: linear1 -> ReLU -> linear2 with a 2048 hidden layer
 downsampling_type="linear"
 ctc_vocab_size=-1
 speech_encoder_pad=0
