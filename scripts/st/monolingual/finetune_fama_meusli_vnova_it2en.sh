@@ -114,8 +114,6 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++train_config.output_dir="$master_out_dir" \
     ++hydra.run.dir="$master_out_dir" \
     ++log_config.use_wandb=false \
-    ++log_config.wandb_entity_name=seraphina-unitn \
-    ++log_config.wandb_project_name=slam-st \
     > "$master_out_dir/train.log" 2>&1
 
     
