@@ -116,11 +116,9 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++log_config.wandb_project_name=slam-st \
     > "$master_out_dir/train.log" 2>&1
 
-#++ckpt_path="$meusli_weights_path" \
     
 # 2. Find Checkpoint (Wildcard to handle step count)
 ckpt_path=$(ls -d "$master_out_dir"/st_epoch_*_step_* 2>/dev/null | sort -V | tail -n 1 || echo "")
-#ckpt_path=$master_out_dir
 
 if [[ -d "$ckpt_path" ]]; then
     decode_log="$ckpt_path/decode_test"
@@ -164,7 +162,6 @@ if [[ -d "$ckpt_path" ]]; then
         ++ckpt_path="$ckpt_path/model.pt" \
         > "$master_out_dir/inference.log" 2>&1
         
-    #++ckpt_path="$meusli_weights_path" \
         
     # 4. Evaluation (BLEU instead of WER)
     global_bleu_file="$master_out_dir/FINAL_GLOBAL_BLEU_REPORT.txt"
