@@ -37,7 +37,7 @@ downsampling_type="linear"
 ctc_vocab_size=-1
 speech_encoder_pad=0
 jsonl_dir=$WORK_DIR/data/voxpopuli_jsonl
-encoder_arch=fama # fama | whisper-ctc
+encoder_arch=fama
 # Everything in this block follows from encoder_arch. The dataset has to match the encoder:
 # fama_dataset = fbank+CMVN padded to the longest batch item, speech_dataset = Whisper log-mel padded to 30s.
 dataset_type=fama_dataset
