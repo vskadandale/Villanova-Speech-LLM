@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Per-test-set evaluation of the ST checkpoints, on the same test sets as scripts/asr/bilingual/eval_meusli_en_it_per_testset.sh:
+# Per-test-set evaluation of the ST checkpoints, on the same test sets as scripts/asr/bilingual/eval_fama_meusli_vnova_bilingual.sh:
 #   model=bilingual  finetune_fama_meusli_vnova_bilingual.sh (en->it + it->en ST)
 #   model=multitask     finetune_fama_meusli_vnova_multitask.sh    (ASR en/it + ST en->it/it->en)
 #
@@ -46,8 +46,8 @@ recipe_dir=src/slam_llm/recipe
 
 # --- Same settings as finetune_fama_meusli_vnova_{bilingual,multitask}.sh ---
 case "$model" in
-    bilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=translate_bilingual.yaml; exp_data=large_en_it;           jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
-    multitask)    conf_dir=$run_dir/scripts/multitask/conf; prompt_yaml=multitask.yaml;    exp_data=large_en_it_multitask; jsonl_dir=$WORK_DIR/data/large_en_it_multitask_jsonl ;;
+    bilingual) conf_dir=$run_dir/scripts/st/conf; prompt_yaml=translate_bilingual.yaml; run_name=ST_large_en2it_it2en_fama_meusli_vnova;        jsonl_dir=$WORK_DIR/data/large_en_it_st_jsonl ;;
+    multitask)    conf_dir=$run_dir/scripts/multitask/conf; prompt_yaml=multitask.yaml;    run_name=multitask_large_en2it_it2en_fama_meusli_vnova; jsonl_dir=$WORK_DIR/data/large_en_it_multitask_jsonl ;;
     *) echo "model must be bilingual or multitask, not '$model'"; exit 1 ;;
 esac
 exp_dir=$run_dir/exp
@@ -71,8 +71,7 @@ lora_rank=32
 lora_alpha=32
 init_skip_prefix=encoder_projector.linear1
 pruning_type=none
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ST_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 
 large_test_jsonl=$jsonl_dir/test.jsonl
 vox_asr_jsonl=$WORK_DIR/data/voxpopuli_jsonl/test.jsonl

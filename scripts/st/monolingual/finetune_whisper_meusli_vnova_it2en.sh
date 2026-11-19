@@ -27,8 +27,8 @@ exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
+run_name=ST_cv17_it2en_whisper_meusli_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
 prompt_yaml=translate_it2en.yaml
-exp_data=cv17_Italian_it2en
 ds_rate=5 # MEUSLI's rate: its linear1 takes 5 Whisper frames x 1280 = 6400
 learn_rate=1e-4
 ctc_layer=24 #16
@@ -55,8 +55,7 @@ init_skip_prefix=null  # same Whisper encoder MEUSLI was trained with, so every 
 train_only_prefix=null #encoder_projector.linear1 # train only MEUSLI's linear1, its linear2 and LoRA stay frozen; null = fine-tune all of them
 pruning_type=none
 
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ST_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 mkdir -p "$master_out_dir"
 
 combined_gt="$master_out_dir/GLOBAL_gt.txt"

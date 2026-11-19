@@ -27,11 +27,9 @@ exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
+run_name=ASR_voxpop_en_whisper_meusli_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
 prompt_yaml=transcribe_en.yaml
-#exp_data=voxpopuli 
-#exp_data=cv17_Italian
-exp_data=voxpopuli
-ds_rate=5
+ds_rate=5 # MEUSLI's rate: its linear1 takes 5 Whisper frames x 1280 = 6400
 learn_rate=1e-4
 ctc_layer=24 #16
 encoder_projector="linear" # MEUSLI's projector: linear1 -> ReLU -> linear2 with a 2048 hidden layer ("pruning" uses 2560)
@@ -59,8 +57,7 @@ lora_alpha=32  # not stored in the file; repo default, which MEUSLI was trained 
 pruning_type=none
 
 # MASTER directory for this threshold
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ASR_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 mkdir -p "$master_out_dir"
 
 combined_gt="$master_out_dir/GLOBAL_gt.txt"
@@ -96,12 +93,14 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++model_config.encoder_path="$speech_encoder_path" \
     ++model_config.encoder_dim=$encoder_dim \
     ++model_config.encoder_projector="$encoder_projector" \
+    ++model_config.encoder_projector_ds_rate="$ds_rate" \
     ++model_config.pruning_type="$pruning_type" \
     ++model_config.ctc_vocab_size="$ctc_vocab_size" \
     ++model_config.normalize=true \
     ++model_config.downsampling_type="$downsampling_type" \
     ++dataset_config.dataset=$dataset_type \
     ++dataset_config.file="$dataset_file" \
+    ++dataset_config.encoder_projector_ds_rate="$ds_rate" \
     ++dataset_config.train_data_path="$jsonl_dir/train.jsonl" \
     ++dataset_config.val_data_path="$jsonl_dir/val.jsonl" \
     ++dataset_config.input_type=$input_type \
@@ -119,7 +118,6 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     
 # 2. Find Checkpoint (Wildcard to handle step count)
 ckpt_path=$(ls -d "$master_out_dir"/asr_epoch_*_step_* 2>/dev/null | sort -V | tail -n 1 || echo "")
-#ckpt_path=$master_out_dir
 
 if [[ -d "$ckpt_path" ]]; then
     decode_log="$ckpt_path/decode_test"
@@ -138,10 +136,12 @@ if [[ -d "$ckpt_path" ]]; then
         ++model_config.pruning_type="$pruning_type" \
         ++model_config.encoder_dim=$encoder_dim \
         ++model_config.encoder_projector="$encoder_projector" \
+        ++model_config.encoder_projector_ds_rate="$ds_rate" \
         ++model_config.normalize=true \
         ++model_config.downsampling_type="$downsampling_type" \
         ++dataset_config.dataset=$dataset_type \
         ++dataset_config.file="$dataset_file" \
+        ++dataset_config.encoder_projector_ds_rate="$ds_rate" \
         ++dataset_config.input_type=$input_type \
         ++dataset_config.mel_size=$mel_size \
         ++dataset_config.val_data_path="$jsonl_dir/test.jsonl" \
@@ -159,7 +159,6 @@ if [[ -d "$ckpt_path" ]]; then
         ++ckpt_path="$ckpt_path/model.pt" \
         > "$master_out_dir/inference.log" 2>&1
         
-    #++ckpt_path="$meusli_weights_path" \
         
     # 4. Evaluation
     global_wer_file="$master_out_dir/FINAL_GLOBAL_WER_REPORT.txt"

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=fama_meusli_en_it
+#SBATCH --job-name=fama_meusli_vnova_it
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16         # Double the dataloader workers for overhead
 #SBATCH --gres=gpu:1               # Only 1 GPU needed for this search
 #SBATCH --mem=64G                  # Plenty of room for LLM + audio buffers
-#SBATCH --time=96:00:00            # Binary search is slow; give it 24h
+#SBATCH --time=47:00:00            # Binary search is slow; give it 24h
 #SBATCH --account=IscrC_COBRAS
 #SBATCH --partition=boost_usr_prod
 #SBATCH --qos=boost_qos_lprod      # Necessary for a 24h limit
@@ -31,4 +31,4 @@ ulimit -l unlimited
 export PYTHONUNBUFFERED=1
 
 # Execute your specific logic script
-bash $WORK/Villanova-Speech-LLM/scripts/asr/bilingual/finetune_meusli_en_it.sh
+bash $WORK/Villanova-Speech-LLM/scripts/asr/monolingual/finetune_fama_meusli_vnova_it.sh

@@ -21,23 +21,22 @@ run_dir=$WORK_DIR/Villanova-Speech-LLM
 export PYTHONPATH="$run_dir/src"
 cd "$run_dir"
 recipe_dir=src/slam_llm/recipe
-conf_dir=$run_dir/scripts/st/conf
+conf_dir=$run_dir/scripts/asr/conf
 
 exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
-prompt_yaml=translate_it2en.yaml
-exp_data=cv17_Italian_it2en
+run_name=ASR_voxpop_en_fama_scratch_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
+prompt_yaml=transcribe_en.yaml
 ds_rate=2
 learn_rate=1e-4
 ctc_layer=24 #16
-encoder_projector="linear"
+encoder_projector="pruning"
 downsampling_type="linear"
 ctc_vocab_size=-1
 speech_encoder_pad=0
-# val.jsonl = first 500 lines of validation.jsonl, the same utterances as the cv17_Italian_it_jsonl ASR val.jsonl
-jsonl_dir=$WORK_DIR/data/cv17_Italian_it2en_jsonl
+jsonl_dir=$WORK_DIR/data/voxpopuli_jsonl
 encoder_arch=fama # fama | whisper-ctc
 # Everything in this block follows from encoder_arch. The dataset has to match the encoder:
 # fama_dataset = fbank+CMVN padded to the longest batch item, speech_dataset = Whisper log-mel padded to 30s.
@@ -46,14 +45,12 @@ encoder_dim=1024
 mel_size=80
 speech_encoder_path="$run_dir/models/fama-medium-asr"
 add_layer_norm=true
-
 # dataset_config.file is what selects the dataset class, dataset_config.dataset is only a label
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
 pruning_type=none
 
-exp_tag="${encoder_arch}_linear_${llm_name}"
-master_out_dir="$exp_dir/ST_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 mkdir -p "$master_out_dir"
 
 combined_gt="$master_out_dir/GLOBAL_gt.txt"
@@ -73,7 +70,7 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++train_config.batching_strategy=custom \
     ++train_config.warmup_steps=1000 \
     ++train_config.total_steps=1000000 \
-    ++train_config.validation_interval=5000 \
+    ++train_config.validation_interval=10000 \
     ++train_config.batch_size_training=4 \
     ++train_config.val_batch_size=4 \
     ++train_config.num_workers_dataloader=4 \
@@ -85,6 +82,7 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++model_config.encoder_name="$encoder_arch" \
     ++model_config.encoder_path="$speech_encoder_path" \
     ++model_config.encoder_dim=$encoder_dim \
+    ++model_config.add_layer_norm=$add_layer_norm \
     ++model_config.encoder_projector="$encoder_projector" \
     ++model_config.encoder_projector_ds_rate="$ds_rate" \
     ++model_config.pruning_type="$pruning_type" \
@@ -99,21 +97,19 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++dataset_config.val_data_path="$jsonl_dir/val.jsonl" \
     ++dataset_config.input_type=$input_type \
     ++dataset_config.mel_size=$mel_size \
-    ++train_config.model_name=st \
+    ++train_config.model_name=asr \
     ++train_config.num_epochs=4 \
     ++metric=acc \
     ++train_config.output_dir="$master_out_dir" \
     ++hydra.run.dir="$master_out_dir" \
     ++log_config.use_wandb=false \
     ++log_config.wandb_entity_name=seraphina-unitn \
-    ++log_config.wandb_project_name=slam-st \
+    ++log_config.wandb_project_name=slam-ti \
     > "$master_out_dir/train.log" 2>&1
 
-#++ckpt_path="$meusli_weights_path" \
     
 # 2. Find Checkpoint (Wildcard to handle step count)
-ckpt_path=$(ls -d "$master_out_dir"/st_epoch_*_step_* 2>/dev/null | sort -V | tail -n 1 || echo "")
-#ckpt_path=$master_out_dir
+ckpt_path=$(ls -d "$master_out_dir"/asr_epoch_*_step_* 2>/dev/null | sort -V | tail -n 1 || echo "")
 
 if [[ -d "$ckpt_path" ]]; then
     decode_log="$ckpt_path/decode_test"
@@ -132,6 +128,7 @@ if [[ -d "$ckpt_path" ]]; then
         ++model_config.encoder_path="$speech_encoder_path" \
         ++model_config.pruning_type="$pruning_type" \
         ++model_config.encoder_dim=$encoder_dim \
+        ++model_config.add_layer_norm=$add_layer_norm \
         ++model_config.encoder_projector="$encoder_projector" \
         ++model_config.normalize=true \
         ++model_config.downsampling_type="$downsampling_type" \
@@ -142,7 +139,7 @@ if [[ -d "$ckpt_path" ]]; then
         ++dataset_config.mel_size=$mel_size \
         ++dataset_config.val_data_path="$jsonl_dir/test.jsonl" \
         ++dataset_config.inference_mode=true \
-        ++train_config.model_name=st \
+        ++train_config.model_name=asr \
         ++train_config.freeze_encoder=true \
         ++train_config.freeze_llm=true \
         ++train_config.use_peft=true \
@@ -153,9 +150,8 @@ if [[ -d "$ckpt_path" ]]; then
         ++ckpt_path="$ckpt_path/model.pt" \
         > "$master_out_dir/inference.log" 2>&1
         
-    #++ckpt_path="$meusli_weights_path" \
         
-    # 4. Evaluation (BLEU instead of WER)
-    global_bleu_file="$master_out_dir/FINAL_GLOBAL_BLEU_REPORT.txt"
-    python "$run_dir/src/slam_llm/utils/compute_bleu_en.py" "${decode_log}_gt" "${decode_log}_pred" "$global_bleu_file"
+    # 4. Evaluation
+    global_wer_file="$master_out_dir/FINAL_GLOBAL_WER_REPORT.txt"
+    python "$run_dir/src/slam_llm/utils/compute_wer_en.py" "${decode_log}_gt" "${decode_log}_pred" "$global_wer_file"
 fi

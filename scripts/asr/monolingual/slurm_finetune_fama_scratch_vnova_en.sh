@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=fama_meusli_en
+#SBATCH --job-name=fama_scratch_vnova_en
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16         # Double the dataloader workers for overhead
@@ -31,4 +31,4 @@ ulimit -l unlimited
 export PYTHONUNBUFFERED=1
 
 # Execute your specific logic script
-bash $WORK/Villanova-Speech-LLM/scripts/asr/monolingual/finetune_meusli_en.sh
+bash $WORK/Villanova-Speech-LLM/scripts/asr/monolingual/finetune_fama_scratch_vnova_en.sh

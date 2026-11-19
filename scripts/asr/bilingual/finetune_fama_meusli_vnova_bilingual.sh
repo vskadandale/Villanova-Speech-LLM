@@ -24,14 +24,12 @@ recipe_dir=src/slam_llm/recipe
 conf_dir=$run_dir/scripts/asr/conf
 
 exp_dir=$run_dir/exp
-llm_name=eurollm-1.7b
+llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
-llm_dim=2048
-prompt_yaml=transcribe_en.yaml
-#exp_data=voxpopuli 
-#exp_data=cv17_Italian
-exp_data=voxpopuli
-ds_rate=5
+llm_dim=2560
+run_name=ASR_large_en_it_fama_meusli_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
+prompt_yaml=transcribe.yaml
+ds_rate=2
 learn_rate=1e-4
 ctc_layer=24 #16
 encoder_projector="linear" # MEUSLI's projector: linear1 -> ReLU -> linear2 with a 2048 hidden layer ("pruning" uses 2560)
@@ -40,27 +38,28 @@ ctc_vocab_size=-1
 speech_encoder_pad=0
 #jsonl_dir=$WORK_DIR/data/cv17_Italian_it_jsonl
 #jsonl_dir=$WORK_DIR/data/voxpopuli_jsonl
-jsonl_dir=$WORK_DIR/data/voxpopuli_jsonl
-encoder_arch=whisper 
-dataset_type=speech_dataset
-encoder_dim=1280
-mel_size=128
-speech_encoder_path="$run_dir/models/large-v3-turbo.pt"
+jsonl_dir=$WORK_DIR/data/large_en_it_jsonl
+encoder_arch=fama
+# Everything in this block follows from encoder_arch. The dataset has to match the encoder:
+# fama_dataset = fbank+CMVN padded to the longest batch item, speech_dataset = Whisper log-mel padded to 30s.
+dataset_type=fama_dataset
+encoder_dim=1024
+mel_size=80
+speech_encoder_path="$run_dir/models/fama-medium-asr"
+add_layer_norm=true
 
 # dataset_config.file is what selects the dataset class, dataset_config.dataset is only a label
 dataset_file="src/slam_llm/datasets/${dataset_type}.py:get_${dataset_type}"
 input_type=mel
-# --- MEUSLI warm start: same Whisper encoder MEUSLI was trained with, so every tensor of the checkpoint is loaded ---
-meusli_weights_path="$run_dir/models/meusli-eurollm-1.7b.pt" # = HF SpeechTek/MEUSLI_projector_v2: projector 6400->2048->2048 + LoRA on eurollm-1.7b
-lora_rank=8    # rank of the LoRA stored in that file (q_proj, v_proj on all 24 layers)
-lora_alpha=32  # not stored in the file; repo default, which MEUSLI was trained with
-# projector and LoRA are trained, Whisper and EuroLLM stay frozen. model.pt then holds every tensor of the MEUSLI file,
-# so decoding loads only model.pt
+# --- MEUSLI adaptation: start from the Whisper-based MEUSLI and swap its encoder-facing layer for a FAMA one ---
+meusli_weights_path="$run_dir/models/meusli-villanova-2b.pt" # projector 6400->2048->2560 + LoRA on villanova-2b
+lora_rank=32   # rank of the LoRA stored in that file (the repo default of 8 does not load)
+lora_alpha=32  # checked by decoding with the original Whisper pipeline: 32 works, 128 gives garbage
+init_skip_prefix=encoder_projector.linear1  # 6400 = 5 Whisper frames x 1280: not loaded, re-initialised as 1024*ds_rate -> 2048
+train_only_prefix=null #encoder_projector.linear1 # train only the new layer, MEUSLI's linear2 and LoRA stay frozen; null = train them too
 pruning_type=none
 
-# MASTER directory for this threshold
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ASR_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 mkdir -p "$master_out_dir"
 
 combined_gt="$master_out_dir/GLOBAL_gt.txt"
@@ -79,7 +78,9 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++train_config.peft_config.peft_method=lora \
     ++train_config.peft_config.r=$lora_rank \
     ++train_config.peft_config.lora_alpha=$lora_alpha \
-    ++ckpt_path="$meusli_weights_path" \
+    ++train_config.train_only_prefix=$train_only_prefix \
+    ++model_config.init_ckpt_path="$meusli_weights_path" \
+    ++model_config.init_ckpt_skip_prefix=$init_skip_prefix \
     ++train_config.batching_strategy=custom \
     ++train_config.warmup_steps=1000 \
     ++train_config.total_steps=1000000 \
@@ -95,13 +96,17 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++model_config.encoder_name="$encoder_arch" \
     ++model_config.encoder_path="$speech_encoder_path" \
     ++model_config.encoder_dim=$encoder_dim \
+    ++model_config.add_layer_norm=$add_layer_norm \
     ++model_config.encoder_projector="$encoder_projector" \
+    ++model_config.encoder_projector_ds_rate="$ds_rate" \
     ++model_config.pruning_type="$pruning_type" \
+    ++model_config.encoder_ctc_layer="$ctc_layer" \
     ++model_config.ctc_vocab_size="$ctc_vocab_size" \
     ++model_config.normalize=true \
     ++model_config.downsampling_type="$downsampling_type" \
     ++dataset_config.dataset=$dataset_type \
     ++dataset_config.file="$dataset_file" \
+    ++dataset_config.encoder_projector_ds_rate="$ds_rate" \
     ++dataset_config.train_data_path="$jsonl_dir/train.jsonl" \
     ++dataset_config.val_data_path="$jsonl_dir/val.jsonl" \
     ++dataset_config.input_type=$input_type \
@@ -116,6 +121,7 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++log_config.wandb_project_name=slam-ti \
     > "$master_out_dir/train.log" 2>&1
 
+#++ckpt_path="$meusli_weights_path" \
     
 # 2. Find Checkpoint (Wildcard to handle step count)
 ckpt_path=$(ls -d "$master_out_dir"/asr_epoch_*_step_* 2>/dev/null | sort -V | tail -n 1 || echo "")
@@ -133,15 +139,18 @@ if [[ -d "$ckpt_path" ]]; then
         ++model_config.llm_dim=$llm_dim \
         ++model_config.encoder_name="$encoder_arch" \
         ++model_config.encoder_ctc_layer="$ctc_layer" \
+        ++model_config.encoder_projector_ds_rate="$ds_rate" \
         ++model_config.ctc_vocab_size="$ctc_vocab_size" \
         ++model_config.encoder_path="$speech_encoder_path" \
         ++model_config.pruning_type="$pruning_type" \
         ++model_config.encoder_dim=$encoder_dim \
+        ++model_config.add_layer_norm=$add_layer_norm \
         ++model_config.encoder_projector="$encoder_projector" \
         ++model_config.normalize=true \
         ++model_config.downsampling_type="$downsampling_type" \
         ++dataset_config.dataset=$dataset_type \
         ++dataset_config.file="$dataset_file" \
+        ++dataset_config.encoder_projector_ds_rate="$ds_rate" \
         ++dataset_config.input_type=$input_type \
         ++dataset_config.mel_size=$mel_size \
         ++dataset_config.val_data_path="$jsonl_dir/test.jsonl" \
@@ -152,6 +161,8 @@ if [[ -d "$ckpt_path" ]]; then
         ++train_config.use_peft=true \
         ++train_config.peft_config.r=$lora_rank \
         ++train_config.peft_config.lora_alpha=$lora_alpha \
+        ++model_config.init_ckpt_path="$meusli_weights_path" \
+        ++model_config.init_ckpt_skip_prefix=$init_skip_prefix \
         ++train_config.batching_strategy=custom \
         ++train_config.num_epochs=1 \
         ++train_config.val_batch_size=1 \
@@ -163,5 +174,5 @@ if [[ -d "$ckpt_path" ]]; then
         
     # 4. Evaluation
     global_wer_file="$master_out_dir/FINAL_GLOBAL_WER_REPORT.txt"
-    python "$run_dir/src/slam_llm/utils/compute_wer_en.py" "${decode_log}_gt" "${decode_log}_pred" "$global_wer_file"
+    python "$run_dir/src/slam_llm/utils/compute_wer.py" "${decode_log}_gt" "${decode_log}_pred" "$global_wer_file"
 fi

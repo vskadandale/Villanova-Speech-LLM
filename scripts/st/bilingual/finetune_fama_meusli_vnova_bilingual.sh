@@ -27,8 +27,8 @@ exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
+run_name=ST_large_en2it_it2en_fama_meusli_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
 prompt_yaml=translate_bilingual.yaml # one prompt per direction, picked by each record's {src_lang}2{tgt_lang}
-exp_data=large_en_it
 ds_rate=2
 learn_rate=1e-4
 ctc_layer=24 #16
@@ -57,8 +57,7 @@ init_skip_prefix=encoder_projector.linear1  # 6400 = 5 Whisper frames x 1280: no
 train_only_prefix=null #encoder_projector.linear1 # train only the new layer, MEUSLI's linear2 and LoRA stay frozen; null = train them too
 pruning_type=none
 
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ST_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 mkdir -p "$master_out_dir"
 
 combined_gt="$master_out_dir/GLOBAL_gt.txt"

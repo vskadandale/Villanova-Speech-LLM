@@ -1,15 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=fama_linear_vnova_en2it
+#SBATCH --job-name=eval_fama_meusli_vnova_bilingual
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=16         # Double the dataloader workers for overhead
-#SBATCH --gres=gpu:1               # Only 1 GPU needed for this search
-#SBATCH --mem=64G                  # Plenty of room for LLM + audio buffers
-#SBATCH --time=47:00:00            # Binary search is slow; give it 24h
+#SBATCH --cpus-per-task=8          # inference uses 1 dataloader worker; 8 = one GPU's share of a node
+#SBATCH --gres=gpu:1               # batch-size-1 decoding on one GPU
+#SBATCH --mem=64G                  # LLM + encoder + audio buffers (same as training job)
+#SBATCH --time=04:00:00            # decodes voxpopuli_en (1,842 utts, ~22 min before) + small_en_it (4,129 utts, ~50 min)
 #SBATCH --account=IscrC_COBRAS
 #SBATCH --partition=boost_usr_prod
-#SBATCH --qos=boost_qos_lprod      # Necessary for a 24h limit
-#SBATCH --output=search_output_%j.log
+#SBATCH --output=eval_output_%j.log
 
 # --- Environment Setup ---
 module purge
@@ -31,4 +30,4 @@ ulimit -l unlimited
 export PYTHONUNBUFFERED=1
 
 # Execute your specific logic script
-bash $WORK/Villanova-Speech-LLM/scripts/st/monolingual/finetune_fama_linear_vnova_en2it.sh
+bash $WORK/Villanova-Speech-LLM/scripts/asr/bilingual/eval_fama_meusli_vnova_bilingual.sh

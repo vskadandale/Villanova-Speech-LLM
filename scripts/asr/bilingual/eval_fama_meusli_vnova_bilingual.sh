@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Per-test-set evaluation of the bilingual (large_en_it) checkpoint trained by finetune_meusli_en_it.sh.
+# Per-test-set evaluation of the bilingual (large_en_it) checkpoint trained by finetune_fama_meusli_vnova_bilingual.sh.
 #
 #   1. large_en_it_by_subset: no re-decoding. CV17 Italian (and the other large_en_it subsets) are part of the
 #      large_en_it test set with the same keys and references, so the existing decode is split per subset and scored.
@@ -15,7 +15,7 @@ set -euo pipefail
 #       small_en_it/             decode_test_gt/_pred, inference logs, .hydra, scores/ (italic_it, tedlium_en, all)
 #       RESULTS.tsv              the numbers to report
 # Re-running overwrites the contents of this EVAL folder.
-# Set ckpt_path=<.../asr_epoch_X_step_Y> to pick a checkpoint; default: the latest one, as in finetune_meusli_en_it.sh.
+# Set ckpt_path=<.../asr_epoch_X_step_Y> to pick a checkpoint; default: the latest one, as in finetune_fama_meusli_vnova_bilingual.sh.
 
 # --- Auto-detect Environment ---
 if [[ -d "/stek/vskadandale" ]]; then
@@ -37,13 +37,13 @@ cd "$run_dir"
 recipe_dir=src/slam_llm/recipe
 conf_dir=$run_dir/scripts/asr/conf
 
-# --- Same settings as finetune_meusli_en_it.sh ---
+# --- Same settings as finetune_fama_meusli_vnova_bilingual.sh ---
 exp_dir=$run_dir/exp
 llm_name=villanova-2b
 llm_path="$run_dir/models/$llm_name"
 llm_dim=2560
+run_name=ASR_large_en_it_fama_meusli_vnova # <task>_<data>_<encoder>_<projector init>_<llm>
 prompt_yaml=transcribe.yaml
-exp_data=large_en_it
 ds_rate=2
 ctc_layer=24
 encoder_projector="linear"
@@ -62,8 +62,7 @@ lora_rank=32
 lora_alpha=32
 init_skip_prefix=encoder_projector.linear1
 pruning_type=none
-exp_tag="${encoder_arch}_meusli_${llm_name}"
-master_out_dir="$exp_dir/ASR_${exp_data}_${exp_tag}"
+master_out_dir="$exp_dir/$run_name"
 
 large_test_jsonl=$WORK_DIR/data/large_en_it_jsonl/test.jsonl
 vox_test_jsonl=$WORK_DIR/data/voxpopuli_jsonl/test.jsonl
@@ -92,7 +91,7 @@ mkdir -p "$eval_dir"
 echo "Checkpoint: $ckpt_path"
 echo "Results:    $eval_dir"
 
-# decode <test jsonl> <output folder>: same flags as the large_en_it decode in finetune_meusli_en_it.sh,
+# decode <test jsonl> <output folder>: same flags as the large_en_it decode in finetune_fama_meusli_vnova_bilingual.sh,
 # with the hydra dir, log file and decode files all inside the output folder
 decode() {
     local test_jsonl=$1 out_dir=$2
