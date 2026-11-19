@@ -210,4 +210,5 @@ If you use this code, please also cite SLAM-LLM:
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). Some files under `src/` come from other projects and carry their own
+licence header (e.g. Llama 2 Community License, GPL-3.0); for those files, the header applies.

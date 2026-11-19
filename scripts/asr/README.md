@@ -38,7 +38,7 @@ The encoder and the LLM are frozen. The projector and a LoRA adapter on the LLM 
   tensor is loaded and training continues from there.
 
 Shared settings: learning rate 1e-4 with 1000 warm-up steps, batch size 4, 4 epochs, fp16, one GPU. Validation runs
-every 5000 steps (10000 for FAMA × scratch EN), and a checkpoint is saved whenever the validation loss improves.
+every 5000 steps, and a checkpoint is saved whenever the validation loss improves.
 
 ## Running
 

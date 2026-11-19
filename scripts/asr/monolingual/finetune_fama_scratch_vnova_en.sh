@@ -69,7 +69,7 @@ torchrun --nnodes 1 --nproc_per_node 1 "$recipe_dir/finetune.py" \
     ++train_config.batching_strategy=custom \
     ++train_config.warmup_steps=1000 \
     ++train_config.total_steps=1000000 \
-    ++train_config.validation_interval=10000 \
+    ++train_config.validation_interval=5000 \
     ++train_config.batch_size_training=4 \
     ++train_config.val_batch_size=4 \
     ++train_config.num_workers_dataloader=4 \
