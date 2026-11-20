@@ -210,7 +210,23 @@ applied to all models alike so that results stay comparable.
 
 ## Checkpoints
 
-The trained models are available at: **TODO link**.
+The FAMA × MEUSLI × Villanova models are on Hugging Face, in the
+[SpeechTek collection](https://huggingface.co/collections/SpeechTek/meultilingual-speechllm-projectors).
+Each repo holds `model.pt` (projector + LoRA, 14.16M parameters) and a model card with its training
+script, hyperparameters and results:
+
+| Model | Repo |
+|---|---|
+| ASR Italian | [speechllm_fama_meusli_villanova_asr_it_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_asr_it_v1) |
+| ASR English | [speechllm_fama_meusli_villanova_asr_en_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_asr_en_v1) |
+| ST Italian→English | [speechllm_fama_meusli_villanova_st_it2en_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_st_it2en_v1) |
+| ST English→Italian | [speechllm_fama_meusli_villanova_st_en2it_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_st_en2it_v1) |
+| Bilingual ASR | [speechllm_fama_meusli_villanova_bilingual_asr_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_bilingual_asr_v1) |
+| Bilingual ST | [speechllm_fama_meusli_villanova_bilingual_st_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_bilingual_st_v1) |
+| Multitask ASR + ST | [speechllm_fama_meusli_villanova_multitask_v1](https://huggingface.co/SpeechTek/speechllm_fama_meusli_villanova_multitask_v1) |
+
+To decode with one: `hf download SpeechTek/<repo> model.pt --local-dir checkpoints/<repo>`, then pass
+`ckpt_path=checkpoints/<repo>/model.pt` to the matching script.
 
 ## Acknowledgements
 
