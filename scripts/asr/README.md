@@ -7,9 +7,9 @@ Speech recognition for English and Italian. Setup, model downloads and the data 
 
 | Script | Language | Encoder | Projector init | LLM | Prompt (`conf/`) | WER ↓ |
 |---|---|---|---|---|---|---|
-| `monolingual/finetune_fama_scratch_vnova_it.sh` | IT | FAMA | scratch | Villanova-2B | `transcribe_it.yaml` | 7.68 |
-| `monolingual/finetune_fama_scratch_vnova_en.sh` | EN | FAMA | scratch | Villanova-2B | `transcribe_en.yaml` | 6.86 |
-| `monolingual/finetune_fama_meusli_vnova_it.sh` | IT | FAMA | MEUSLI | Villanova-2B | `transcribe_it.yaml` | 7.34 |
+| `monolingual/finetune_fama_scratch_vnova_it.sh` | IT | FAMA | scratch | Villanova-2B | `transcribe_it.yaml` | 7.79 |
+| `monolingual/finetune_fama_scratch_vnova_en.sh` | EN | FAMA | scratch | Villanova-2B | `transcribe_en.yaml` | 7.44 |
+| `monolingual/finetune_fama_meusli_vnova_it.sh` | IT | FAMA | MEUSLI | Villanova-2B | `transcribe_it.yaml` | 7.56 |
 | `monolingual/finetune_fama_meusli_vnova_en.sh` | EN | FAMA | MEUSLI | Villanova-2B | `transcribe_en.yaml` | 6.55 |
 | `monolingual/finetune_whisper_meusli_vnova_it.sh` | IT | Whisper | MEUSLI | Villanova-2B | `transcribe_it.yaml` | 6.08 |
 | `monolingual/finetune_whisper_meusli_vnova_en.sh` | EN | Whisper | MEUSLI | Villanova-2B | `transcribe_en.yaml` | 7.09 |

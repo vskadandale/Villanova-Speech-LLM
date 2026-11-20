@@ -17,8 +17,8 @@ One model per task and language. IT is trained and tested on Common Voice 17 Ita
 
 | Encoder | Projector init | LLM | ASR IT (WER ↓) | ASR EN (WER ↓) | ST IT→EN (BLEU ↑) | ST EN→IT (BLEU ↑) |
 |---|---|---|---|---|---|---|
-| FAMA | scratch | Villanova-2B | 7.68 | 6.86 | 56.18 | 58.30 |
-| FAMA | MEUSLI | Villanova-2B | 7.34 | 6.55 | 55.66 | 57.75 |
+| FAMA | scratch | Villanova-2B | 7.79 | 7.44 | 56.18 | 58.30 |
+| FAMA | MEUSLI | Villanova-2B | 7.56 | 6.55 | 55.66 | 57.75 |
 | Whisper | MEUSLI | Villanova-2B | 6.08 | 7.09 | 56.87 | 56.22 |
 | Whisper | MEUSLI | EuroLLM-1.7B | 6.31 | 6.67 | 60.86 | 62.19 |
 
@@ -185,11 +185,37 @@ the latest.
 Configuration follows SLAM-LLM's priority: command-line overrides in the shell script > the prompt yaml in `conf/` >
 the dataclass defaults in `src/slam_llm/recipe/speech_config.py`.
 
+## Known issues and TODO
+
+**Repetition loops at decoding time.** Decoding uses beam search (4 beams, at most 200 new tokens) with no guard
+against repetition (`src/slam_llm/models/slam_model.py`, `generate`). On a handful of test utterances a model gets
+stuck repeating a word or phrase until it reaches the 200-token limit (e.g. "di strati di strati di strati …").
+Each such output can add close to 200 inserted words, so a few of them move the WER noticeably, especially on the
+smaller VoxPopuli EN test set (1,842 utterances). Which utterances loop varies from one training run to the next.
+
+For example, the three ASR models retrained for the results above (FAMA × scratch IT and EN, FAMA × MEUSLI IT)
+gave higher WERs than earlier runs of the same models, yet without the 3–7 looping utterances of each test set,
+the retrained models are as good or better:
+
+| Model | WER, all utterances (new / earlier) | WER without looping utterances (new / earlier) |
+|---|---|---|
+| FAMA × MEUSLI, IT | 7.56 / 7.34 | 7.22 / 7.27 |
+| FAMA × scratch, IT | 7.79 / 7.68 | 7.55 / 7.67 |
+| FAMA × scratch, EN | 7.44 / 6.86 | 6.88 / 6.87 |
+
+**TODO:** add a guard against repetition at decoding time (e.g. `no_repeat_ngram_size`, a mild
+`repetition_penalty`, or a token limit tied to the audio length), check that it does not hurt correct outputs, and
+re-decode every model with it. This only needs decoding with the existing checkpoints, not retraining, and has to be
+applied to all models alike so that results stay comparable.
+
 ## Checkpoints
 
 The trained models are available at: **TODO link**.
 
 ## Acknowledgements
+
+This work was supported by Ministero delle Imprese e del Made in Italy (IPCEI Cloud DM 27 giugno 2022 – IPCEI-CL-0000007) and European Union (Next Generation EU). We acknowledge the CINECA award under the ISCRA initiative
+(ISCRA-C project COBRAS), for the availability of high-performance computing resources and support.
 
 This repository builds on [SLAM-LLM](https://github.com/X-LANCE/SLAM-LLM) (MIT license), and uses
 [FAMA](https://huggingface.co/FBK-MT/fama-medium-asr), [Whisper](https://github.com/openai/whisper),
